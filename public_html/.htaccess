@@ -1,0 +1,33 @@
+# Configuración del servidor web (Hostinger usa LiteSpeed, compatible con .htaccess).
+
+# Sin listados de carpetas
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Bloquea archivos ocultos (.env, .git…), excepto .well-known (lo usa el certificado SSL)
+    RewriteRule "(^|/)\.(?!well-known/)" - [F]
+
+    # Todo lo que no sea un archivo real lo atiende index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Caché larga para CSS, JS e imágenes: sus URLs llevan ?v= y cambian cuando cambia el archivo
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/avif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+</IfModule>

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /admin
+Disallow: /miembros
+Disallow: /entrar
+Disallow: /wa
