@@ -86,10 +86,19 @@ php tests/run.php                                           # pruebas (incluye p
 ## Pendiente del dueño
 
 - Nombre definitivo del producto, dominio y número de WhatsApp.
-- Capturas (ingresos y "miles de mensajes") con los datos de los clientes difuminados.
+- Capturas (ingresos y "miles de mensajes") con los datos de los clientes difuminados, en `contenido/capturas/`.
+- Su historia (cómo empezó, qué logró) para la sección "Mi historia" de la landing.
 - Garantía (¿cuántos días de devolución?), módulos del curso y bonos.
 - Enlace de registro o de referido de smmclixy y código de bono (opcional).
 - Cuentas: Resend (fase 5), Pixel + token de la API de Conversiones (fase 6), acceso SSH a Hostinger (fase 7).
+
+## Repositorio público
+
+A 27-09-2026 el repo `SantyCloud/Infoproducto` es **público** (se recomendó al dueño hacerlo privado). Mientras lo sea:
+
+- **Nada de contenido pagado en Git**: ni textos de las lecciones ni descargables. Se guardan en `storage/` del servidor.
+- Las capturas van en `contenido/capturas/`, siempre ya difuminadas.
+- Los secretos, como siempre, solo en `.env`.
 
 ## Riesgos conocidos
 
