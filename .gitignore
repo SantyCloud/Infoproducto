@@ -1,0 +1,12 @@
+# Secretos y datos: nunca van a Git
+/.env
+/storage/*
+!/storage/.htaccess
+!/storage/.gitkeep
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

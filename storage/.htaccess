@@ -1,0 +1,8 @@
+# Aquí están la base de datos y los descargables.
+# Esta carpeta debe quedar FUERA de public_html; esta regla es solo un seguro por si se sube mal.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Deny from all
+</IfModule>
