@@ -1,0 +1,19 @@
+# Ejecuta las pruebas automáticas en cada cambio que se sube a GitHub.
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Versión de PHP
+        run: php -v && php -m | grep -Ei 'pdo_sqlite|gd|curl|mbstring'
+      - name: Pruebas
+        run: php tests/run.php

@@ -30,6 +30,7 @@ require RAIZ . '/app/lib/accesos.php';
 require RAIZ . '/app/lib/emails.php';
 require RAIZ . '/app/lib/ventas.php';
 require RAIZ . '/app/lib/curso.php';
+require RAIZ . '/app/lib/mantenimiento.php';
 require RAIZ . '/app/paginas/publico.php';
 require RAIZ . '/app/paginas/miembros.php';
 require RAIZ . '/app/paginas/admin.php';
@@ -38,6 +39,12 @@ env_cargar(RAIZ . '/.env');
 
 // En la base de datos todo se guarda en UTC; para mostrar fechas se usa ZONA_HORARIA.
 date_default_timezone_set('UTC');
+
+// En producción, PHP nunca muestra errores en pantalla (con rutas del servidor): solo los anota en el log
+if (env('ENTORNO', 'produccion') === 'produccion') {
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+}
 
 // Cualquier aviso de PHP (warning, notice…) se trata como error, para que ningún fallo pase desapercibido.
 // Los avisos de "función obsoleta" solo se anotan en el log: una actualización de PHP no debe tumbar la web.

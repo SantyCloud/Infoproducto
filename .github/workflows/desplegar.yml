@@ -1,0 +1,43 @@
+# Publica la versión actual en Hostinger con un botón: pestaña Actions → "Desplegar en Hostinger" → Run workflow.
+# Necesita estos "secrets" (Settings → Secrets and variables → Actions → New repository secret):
+#   HOSTINGER_HOST     IP del servidor (hPanel → Acceso SSH)
+#   HOSTINGER_PORT     65002
+#   HOSTINGER_USER     tu usuario SSH (uXXXXXXXXX)
+#   HOSTINGER_SSH_KEY  clave privada cuya parte pública agregaste en hPanel → Acceso SSH → Claves SSH
+#   HOSTINGER_RUTA     carpeta del proyecto, ej. /home/uXXXXXXXXX/domains/tudominio.com
+#   HOSTINGER_PHP      ruta de PHP, ej. /opt/alt/php83/usr/bin/php
+name: Desplegar en Hostinger
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    env:
+      HOST: ${{ secrets.HOSTINGER_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pruebas antes de publicar
+        run: php tests/run.php
+      - name: Comprobar configuración
+        if: env.HOST == ''
+        run: |
+          echo "Faltan los secrets HOSTINGER_* (ver el comentario al inicio de este archivo)."
+          exit 1
+      - name: Actualizar el servidor
+        env:
+          PUERTO: ${{ secrets.HOSTINGER_PORT }}
+          USUARIO: ${{ secrets.HOSTINGER_USER }}
+          CLAVE: ${{ secrets.HOSTINGER_SSH_KEY }}
+          RUTA: ${{ secrets.HOSTINGER_RUTA }}
+          PHP: ${{ secrets.HOSTINGER_PHP }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CLAVE" > ~/.ssh/hostinger && chmod 600 ~/.ssh/hostinger
+          ssh-keyscan -p "$PUERTO" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/hostinger -p "$PUERTO" "$USUARIO@$HOST" \
+            "cd '$RUTA' && git pull --ff-only && '$PHP' bin/instalar.php"
