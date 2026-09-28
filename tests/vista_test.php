@@ -7,28 +7,18 @@ prueba('e() escapa el HTML (protege contra inyección de código)', function () 
     afirmar_igual('', e(null));
 });
 
-prueba('la portada muestra el producto escapado y el precio normal tachado', function () {
-    $html = vista('inicio', [
-        'titulo' => 'Prueba',
-        'negocio' => ['producto' => 'Sistema <b>Prueba</b>', 'precio_normal' => 15],
-        'promo' => true,
-        'precio' => 10.0,
-    ]);
-    afirmar_contiene('Sistema &lt;b&gt;Prueba&lt;/b&gt;', $html);
-    afirmar_contiene('<s>$15</s>', $html);
-    afirmar_contiene('<strong>$10</strong>', $html);
-    afirmar_contiene('<html lang="es">', $html, 'Debe ir dentro del layout.');
-    afirmar_contiene('/assets/css/app.css?v=', $html);
-});
+prueba('la landing escapa los textos y tacha el precio normal solo si hay promo', function () {
+    $negocio = ['producto' => 'Sistema <b>Prueba</b>', 'garantia_dias' => 0] + contenido('negocio');
+    $conPromo = vista('landing', datos_landing($negocio, contenido('landing')), 'layout_landing');
+    afirmar_contiene('Sistema &lt;b&gt;Prueba&lt;/b&gt;', $conPromo);
+    afirmar_contiene('<span class="precio-antes">$15</span>', $conPromo);
+    afirmar(!str_contains($conPromo, 'id="garantia"'), 'Con garantia_dias = 0 no se muestra la garantía.');
 
-prueba('sin promo no se tacha nada', function () {
-    $html = vista('inicio', [
-        'titulo' => 'Prueba',
-        'negocio' => ['producto' => 'X', 'precio_normal' => 15],
-        'promo' => false,
-        'precio' => 15.0,
-    ]);
-    afirmar(!str_contains($html, '<s>'), 'No debería haber precio tachado.');
+    $sinPromo = ['promo' => ['activa' => false] + $negocio['promo']] + $negocio;
+    $html = vista('landing', datos_landing($sinPromo, contenido('landing')), 'layout_landing');
+    afirmar(!str_contains($html, 'class="precio-antes'), 'Sin promo no debe haber precio tachado.');
+    afirmar(!str_contains($html, 'class="barra-promo"'), 'Sin promo no hay franja amarilla.');
+    afirmar_contiene('$15', $html);
 });
 
 prueba('no acepta nombres de plantilla con rutas raras', function () {

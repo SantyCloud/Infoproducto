@@ -49,3 +49,23 @@ function asset(string $ruta): string
     $version = is_file($archivo) ? substr(md5((string) filemtime($archivo)), 0, 8) : '0';
     return '/assets/' . $ruta . '?v=' . $version;
 }
+
+/**
+ * Contenido de un CSS de public_html/assets/css/ listo para incrustar en <style>:
+ * sin comentarios ni espacios de más (así la página carga con una petición menos).
+ */
+function css_en_linea(string $archivo): string
+{
+    static $cache = [];
+    if (!isset($cache[$archivo])) {
+        if (!preg_match('/^[a-z0-9_-]+\.css$/', $archivo)) {
+            throw new InvalidArgumentException("Nombre de CSS no válido: $archivo");
+        }
+        $css = (string) file_get_contents(RAIZ . '/public_html/assets/css/' . $archivo);
+        $css = (string) preg_replace('#/\*.*?\*/#s', '', $css);
+        $css = (string) preg_replace('/\s+/', ' ', $css);
+        $css = (string) preg_replace('/\s*([{};,])\s*/', '$1', $css);
+        $cache[$archivo] = str_replace('</', '<\\/', trim($css)); // nunca cerrar la etiqueta <style> por accidente
+    }
+    return $cache[$archivo];
+}

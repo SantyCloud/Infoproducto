@@ -44,4 +44,7 @@ echo $aplicadas
     ? '✓ Base de datos actualizada: ' . implode(', ', $aplicadas) . "\n"
     : "✓ La base de datos ya estaba al día\n";
 
+$cambios = optimizar_capturas();
+echo $cambios ? implode("\n", $cambios) . "\n" : "✓ Las capturas ya estaban optimizadas\n";
+
 echo "Listo.\n";

@@ -3,7 +3,8 @@
  * DATOS DEL NEGOCIO
  *
  * Nombre, precios, promoción, WhatsApp… Se usan en toda la web (landing, emails,
- * área de miembros), así que basta con cambiarlos aquí.
+ * área de miembros, páginas legales), así que basta con cambiarlos aquí.
+ * Lo que está [entre corchetes] es un ejemplo: cámbialo por tus datos reales.
  *
  * Al editar: respeta las comillas '…' y la coma al final de cada línea.
  */
@@ -24,12 +25,16 @@ return [
         'termina' => '2026-10-31 23:59', // hora de Ecuador. Pon null si la promo no tiene fecha de fin
     ],
 
+    // Días de garantía de devolución. Pon 0 si no ofreces garantía (se ocultan las menciones).
+    'garantia_dias' => 7,
+
     // WhatsApp donde cierras las ventas: código de país + número, sin "+" ni espacios (Ecuador: 593…)
     'whatsapp' => [
         'numero' => '593900000000',
-        // Mensaje que aparece ya escrito al abrir WhatsApp.
-        // {codigo} es obligatorio: es lo que te dice qué anuncio trajo la venta.
-        'mensaje' => 'Hola 👋 Quiero el {producto} a {precio}. Mi código: {codigo}',
+        // Mensaje que aparece ya escrito al abrir WhatsApp
+        'mensaje' => 'Hola 👋 Quiero el {producto} a {precio}.',
+        // Se añade al final del mensaje. {codigo} es lo que te dice qué anuncio trajo la venta.
+        'texto_codigo' => 'Mi código: {codigo}',
     ],
 
     // Métodos de pago que aceptas (se muestran en la web para dar confianza)
@@ -44,5 +49,14 @@ return [
     // Contacto de soporte (emails y páginas legales)
     'soporte' => [
         'email' => 'soporte@tudominio.com',
+    ],
+
+    // Datos para las páginas legales (términos, privacidad, reembolsos)
+    'legal' => [
+        'titular' => '[Tu nombre o razón social]',
+        'identificacion' => '[Tu RUC o cédula]',
+        'ciudad' => '[Tu ciudad]',
+        'pais' => 'Ecuador',
+        'fecha_actualizacion' => '28 de septiembre de 2026',
     ],
 ];

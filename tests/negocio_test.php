@@ -34,10 +34,10 @@ prueba('formatea los precios en dólares', function () {
 
 prueba('el archivo contenido/negocio.php tiene los datos que usa la web', function () {
     $negocio = contenido('negocio');
-    foreach (['producto', 'precio_normal', 'promo', 'whatsapp', 'metodos_pago', 'smmclixy', 'soporte'] as $clave) {
+    foreach (['producto', 'precio_normal', 'promo', 'garantia_dias', 'whatsapp', 'metodos_pago', 'smmclixy', 'soporte', 'legal'] as $clave) {
         afirmar(array_key_exists($clave, $negocio), "Falta '$clave' en contenido/negocio.php.");
     }
-    afirmar_contiene('{codigo}', $negocio['whatsapp']['mensaje'], 'El mensaje de WhatsApp debe incluir {codigo}.');
+    afirmar_contiene('{codigo}', $negocio['whatsapp']['texto_codigo'], 'El texto del código de WhatsApp debe incluir {codigo}.');
     afirmar(
         (bool) preg_match('/^\d{8,15}$/', $negocio['whatsapp']['numero']),
         'El número de WhatsApp debe tener solo dígitos, con código de país.'

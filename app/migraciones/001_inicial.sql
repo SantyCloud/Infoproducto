@@ -99,12 +99,14 @@ CREATE TABLE eventos_meta (
     event_id        TEXT    NOT NULL UNIQUE,
     lead_id         INTEGER REFERENCES leads (id),
     venta_id        INTEGER REFERENCES ventas (id),
-    datos           TEXT    NOT NULL,        -- JSON enviado (email y teléfono ya van en hash)
-    estado          TEXT    NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'enviado', 'error')),
-    intentos        INTEGER NOT NULL DEFAULT 0,
-    respuesta       TEXT,
-    creado_en       TEXT    NOT NULL,
-    enviado_en      TEXT
+    datos             TEXT    NOT NULL,      -- JSON enviado (email y teléfono ya van en hash)
+    estado            TEXT    NOT NULL DEFAULT 'pendiente'
+                      CHECK (estado IN ('pendiente', 'enviando', 'enviado', 'error', 'descartado')),
+    intentos          INTEGER NOT NULL DEFAULT 0,
+    ultimo_intento_en TEXT,
+    respuesta         TEXT,
+    creado_en         TEXT    NOT NULL,
+    enviado_en        TEXT
 );
 CREATE INDEX eventos_meta_por_estado ON eventos_meta (estado);
 

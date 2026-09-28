@@ -29,9 +29,26 @@ function config_todo(bool $recargar = false): array
                 'url' => rtrim((string) env('URL_SITIO', 'http://localhost:8000'), '/'),
                 'clave' => (string) env('CLAVE_APP', ''),
                 'zona_horaria' => (string) env('ZONA_HORARIA', 'America/Guayaquil'),
+                // Solo si la web está detrás de un proxy/CDN que envía la IP real en X-Forwarded-For
+                'confiar_proxy' => env('CONFIAR_PROXY', 'false') === 'true',
             ],
             'db' => [
                 'ruta' => ruta_proyecto((string) env('RUTA_BD', 'storage/base.sqlite')),
+            ],
+            'admin' => [
+                'usuario' => (string) env('ADMIN_USUARIO', ''),
+                'clave_hash' => (string) env('ADMIN_CLAVE_HASH', ''),
+            ],
+            'email' => [
+                'resend_api_key' => (string) env('RESEND_API_KEY', ''),
+                'remitente' => (string) env('EMAIL_REMITENTE', ''),
+                'responder_a' => (string) env('EMAIL_RESPONDER_A', ''),
+            ],
+            'meta' => [
+                'pixel_id' => (string) env('META_PIXEL_ID', ''),
+                'token' => (string) env('META_CAPI_TOKEN', ''),
+                'test_event_code' => (string) env('META_TEST_EVENT_CODE', ''),
+                'version' => (string) env('META_GRAPH_VERSION', 'v25.0'),
             ],
         ];
     }

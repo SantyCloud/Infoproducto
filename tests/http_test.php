@@ -31,6 +31,7 @@ function servidor_de_prueba(): array
 
     $servidor = [
         'url' => "http://127.0.0.1:$puerto",
+        'bd' => "$base.sqlite",
         'proceso' => $proceso,
         'archivos' => ["$base.sqlite", "$base.sqlite-wal", "$base.sqlite-shm", "$base.log"],
     ];
@@ -58,11 +59,16 @@ function detener_servidor(array $servidor): void
 }
 
 /** Hace una petición HTTP y devuelve [estado, cabeceras, cuerpo]. */
-function pedir(string $url, string $metodo = 'GET'): array
+function pedir(string $url, string $metodo = 'GET', array $cabeceras = [], ?string $cuerpoEnviado = null): array
 {
-    $cuerpo = file_get_contents($url, false, stream_context_create([
-        'http' => ['method' => $metodo, 'ignore_errors' => true, 'follow_location' => 0, 'timeout' => 5],
-    ]));
+    if (!preg_grep('/^User-Agent:/i', $cabeceras)) {
+        $cabeceras[] = 'User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) Instagram 340.0';
+    }
+    $opciones = ['method' => $metodo, 'ignore_errors' => true, 'follow_location' => 0, 'timeout' => 5, 'header' => implode("\r\n", $cabeceras)];
+    if ($cuerpoEnviado !== null) {
+        $opciones['content'] = $cuerpoEnviado;
+    }
+    $cuerpo = file_get_contents($url, false, stream_context_create(['http' => $opciones]));
     $cabeceras = function_exists('http_get_last_response_headers')
         ? (http_get_last_response_headers() ?? [])
         : ($http_response_header ?? []);
@@ -104,6 +110,31 @@ prueba('no se puede descargar nada privado (.env, base de datos, código)', func
             afirmar(!str_contains($cuerpo, 'CLAVE_APP'), "Se filtró el .env en $ruta.");
             afirmar(!str_contains($cuerpo, '<?php'), "Se filtró código en $ruta.");
         }
+    } finally {
+        detener_servidor($servidor);
+    }
+});
+
+prueba('el botón de WhatsApp crea el lead con su código y redirige a wa.me (los robots no crean leads)', function () {
+    $servidor = servidor_de_prueba();
+    try {
+        [$estado, $cabeceras] = pedir($servidor['url'] . '/wa?b=hero&utm_campaign=prueba&eid=0f8c2e0a-1111-4222-8333-944455556666');
+        afirmar_igual(302, $estado);
+        preg_match('/^Location: (.+)$/mi', $cabeceras, $m);
+        $destino = trim($m[1] ?? '');
+        afirmar(str_starts_with($destino, 'https://wa.me/'), "Destino inesperado: $destino");
+
+        $pdo = db_conectar($servidor['bd']);
+        $lead = $pdo->query('SELECT * FROM leads')->fetch();
+        afirmar(is_array($lead), 'No se creó el lead.');
+        afirmar_contiene($lead['codigo'], rawurldecode($destino), 'El mensaje de WhatsApp debe llevar el código.');
+        afirmar_igual('prueba', $lead['utm_campaign']);
+        afirmar_igual('0f8c2e0a-1111-4222-8333-944455556666', $lead['event_id'], 'Usa el id de evento del navegador (deduplicación con el Pixel).');
+        afirmar_contiene('Set-Cookie: vis=', $cabeceras, 'Si no tenía identificador de visitante, se le asigna.');
+
+        [$estado] = pedir($servidor['url'] . '/wa?b=hero', 'GET', ['User-Agent: facebookexternalhit/1.1']);
+        afirmar_igual(302, $estado, 'Los robots también son redirigidos…');
+        afirmar_igual(1, (int) $pdo->query('SELECT COUNT(*) FROM leads')->fetchColumn(), '…pero no crean leads.');
     } finally {
         detener_servidor($servidor);
     }

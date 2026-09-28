@@ -14,7 +14,30 @@ function respuesta(string $cuerpo, int $estado = 200, array $cabeceras = []): ar
 
 function html(string $cuerpo, int $estado = 200): array
 {
-    return respuesta($cuerpo, $estado, ['Content-Type' => 'text/html; charset=UTF-8']);
+    return respuesta($cuerpo, $estado, [
+        'Content-Type' => 'text/html; charset=UTF-8',
+        // Cada página lleva un nonce distinto (CSP): no debe guardarse en ninguna caché compartida
+        'Cache-Control' => 'no-cache, private',
+        'X-LiteSpeed-Cache-Control' => 'no-cache',
+    ]);
+}
+
+/** Añade una cookie a la respuesta. $segundos < 0 la borra; 0 = hasta cerrar el navegador. */
+function con_cookie(array $respuesta, string $nombre, string $valor, int $segundos, bool $httpOnly = true, string $sameSite = 'Lax', string $ruta = '/'): array
+{
+    $respuesta['cookies'][] = [$nombre, $valor, [
+        'expires' => $segundos > 0 ? time() + $segundos : ($segundos < 0 ? 1 : 0),
+        'path' => $ruta,
+        'secure' => str_starts_with(config('app.url'), 'https://') || es_https(),
+        'httponly' => $httpOnly,
+        'samesite' => $sameSite,
+    ]];
+    return $respuesta;
+}
+
+function sin_cookie(array $respuesta, string $nombre, string $ruta = '/'): array
+{
+    return con_cookie($respuesta, $nombre, '', -1, ruta: $ruta);
 }
 
 function redireccion(string $url, int $estado = 302): array
@@ -58,7 +81,7 @@ function resolver_ruta(array $rutas, string $metodo, string $ruta): array
     return ['estado' => $existeConOtroMetodo ? 405 : 404];
 }
 
-/** Atiende la petición actual y envía la respuesta al navegador. */
+/** Atiende la petición actual, envía la respuesta y luego ejecuta las tareas pendientes. */
 function despachar(array $rutas): void
 {
     try {
@@ -67,6 +90,46 @@ function despachar(array $rutas): void
         $respuesta = respuesta_de_error($error);
     }
     enviar_respuesta($respuesta);
+    ejecutar_tareas_de_fondo();
+}
+
+/** Lista de tareas para después de responder (el visitante no espera por ellas). */
+function &tareas_de_fondo(): array
+{
+    static $tareas = [];
+    return $tareas;
+}
+
+/** Programa una tarea (ej. avisar a Meta) para cuando el visitante ya tenga su respuesta. */
+function despues_de_responder(callable $tarea): void
+{
+    $tareas = &tareas_de_fondo();
+    $tareas[] = $tarea;
+}
+
+function ejecutar_tareas_de_fondo(): void
+{
+    $tareas = &tareas_de_fondo();
+    $pendientes = $tareas;
+    $tareas = [];
+    if (!$pendientes) {
+        return;
+    }
+    // Cierra la conexión con el navegador para que no espere (PHP-FPM o LiteSpeed, el de Hostinger)
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } elseif (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+    }
+    foreach ($pendientes as $tarea) {
+        try {
+            $tarea();
+        } catch (Throwable $error) {
+            registrar('errores', 'Falló una tarea de fondo: ' . $error->getMessage(), [
+                'donde' => $error->getFile() . ':' . $error->getLine(),
+            ]);
+        }
+    }
 }
 
 function atender(array $rutas, string $metodo, string $ruta): array
@@ -107,6 +170,9 @@ function enviar_respuesta(array $respuesta): void
     foreach ($respuesta['cabeceras'] + cabeceras_seguridad() as $nombre => $valor) {
         header($nombre . ': ' . $valor);
     }
+    foreach ($respuesta['cookies'] ?? [] as [$nombre, $valor, $opciones]) {
+        setcookie($nombre, $valor, $opciones);
+    }
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
         echo $respuesta['cuerpo'];
     }
@@ -129,24 +195,39 @@ function cabeceras_seguridad(): array
 }
 
 /**
- * Política de seguridad de contenido: el navegador solo carga recursos de la propia web.
- * Se ampliará en la fase 6 (Pixel de Meta) y en la 4 (videos de YouTube/Drive).
+ * Política de seguridad de contenido: el navegador solo carga recursos de la propia web,
+ * más los orígenes que cada página autorice con csp_permitir() (Pixel de Meta, videos…).
  */
 function politica_csp(): string
 {
     $nonce = csp_nonce();
-    return implode('; ', [
-        "default-src 'self'",
-        "script-src 'self' 'nonce-$nonce'",
-        "style-src 'self' 'nonce-$nonce'",
-        "img-src 'self' data:",
-        "font-src 'self'",
-        "connect-src 'self'",
-        "object-src 'none'",
-        "base-uri 'self'",
-        "form-action 'self'",
-        "frame-ancestors 'none'",
-    ]);
+    $politica = [
+        'default-src' => ["'self'"],
+        'script-src' => ["'self'", "'nonce-$nonce'"],
+        'style-src' => ["'self'", "'nonce-$nonce'"],
+        'img-src' => ["'self'", 'data:'],
+        'font-src' => ["'self'"],
+        'connect-src' => ["'self'"],
+        'frame-src' => ["'none'"],
+        'object-src' => ["'none'"],
+        'base-uri' => ["'self'"],
+        'form-action' => ["'self'"],
+        'frame-ancestors' => ["'none'"],
+    ];
+    foreach (csp_permitir() as $directiva => $origenes) {
+        $politica[$directiva] = array_values(array_unique([...array_diff($politica[$directiva] ?? [], ["'none'"]), ...$origenes]));
+    }
+    return implode('; ', array_map(fn (string $d, array $o) => $d . ' ' . implode(' ', $o), array_keys($politica), $politica));
+}
+
+/** Autoriza un origen externo en la CSP de esta respuesta. Sin argumentos, devuelve lo autorizado. */
+function csp_permitir(?string $directiva = null, string ...$origenes): array
+{
+    static $permitidos = [];
+    if ($directiva !== null) {
+        $permitidos[$directiva] = array_values(array_unique([...($permitidos[$directiva] ?? []), ...$origenes]));
+    }
+    return $permitidos;
 }
 
 /** Valor aleatorio por petición que autoriza nuestros <script>/<style> en línea: <style nonce="<?= csp_nonce() ?>">. */

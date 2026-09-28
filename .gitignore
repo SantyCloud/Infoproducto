@@ -4,6 +4,9 @@
 !/storage/.htaccess
 !/storage/.gitkeep
 
+# Versiones optimizadas de las capturas: las genera bin/instalar.php en cada servidor
+/public_html/assets/img/capturas/
+
 # Sistema y editores
 .DS_Store
 Thumbs.db

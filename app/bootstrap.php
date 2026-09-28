@@ -17,6 +17,14 @@ require RAIZ . '/app/lib/http.php';
 require RAIZ . '/app/lib/vista.php';
 require RAIZ . '/app/lib/contenido.php';
 require RAIZ . '/app/lib/negocio.php';
+require RAIZ . '/app/lib/texto.php';
+require RAIZ . '/app/lib/iconos.php';
+require RAIZ . '/app/lib/imagenes.php';
+require RAIZ . '/app/lib/visitas.php';
+require RAIZ . '/app/lib/limites.php';
+require RAIZ . '/app/lib/leads.php';
+require RAIZ . '/app/lib/cliente_http.php';
+require RAIZ . '/app/lib/meta.php';
 require RAIZ . '/app/paginas/publico.php';
 
 env_cargar(RAIZ . '/.env');
@@ -25,9 +33,14 @@ env_cargar(RAIZ . '/.env');
 date_default_timezone_set('UTC');
 
 // Cualquier aviso de PHP (warning, notice…) se trata como error, para que ningún fallo pase desapercibido.
+// Los avisos de "función obsoleta" solo se anotan en el log: una actualización de PHP no debe tumbar la web.
 set_error_handler(function (int $nivel, string $mensaje, string $archivo, int $linea): bool {
     if (!(error_reporting() & $nivel)) {
         return false; // aviso silenciado a propósito con @
+    }
+    if ($nivel === E_DEPRECATED || $nivel === E_USER_DEPRECATED) {
+        registrar('errores', "Obsoleto: $mensaje", ['donde' => "$archivo:$linea"]);
+        return true;
     }
     throw new ErrorException($mensaje, 0, $nivel, $archivo, $linea);
 });

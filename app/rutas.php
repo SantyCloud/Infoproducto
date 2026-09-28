@@ -7,5 +7,10 @@ declare(strict_types=1);
  */
 
 return [
+    // Públicas
     ['GET', '/', 'pagina_inicio'],
+    ['GET', '/wa', 'pagina_whatsapp'],
+    ['GET', '/terminos', 'pagina_terminos'],
+    ['GET', '/privacidad', 'pagina_privacidad'],
+    ['GET', '/reembolsos', 'pagina_reembolsos'],
 ];
