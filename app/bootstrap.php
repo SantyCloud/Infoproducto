@@ -25,7 +25,14 @@ require RAIZ . '/app/lib/limites.php';
 require RAIZ . '/app/lib/leads.php';
 require RAIZ . '/app/lib/cliente_http.php';
 require RAIZ . '/app/lib/meta.php';
+require RAIZ . '/app/lib/seguridad.php';
+require RAIZ . '/app/lib/accesos.php';
+require RAIZ . '/app/lib/emails.php';
+require RAIZ . '/app/lib/ventas.php';
+require RAIZ . '/app/lib/curso.php';
 require RAIZ . '/app/paginas/publico.php';
+require RAIZ . '/app/paginas/miembros.php';
+require RAIZ . '/app/paginas/admin.php';
 
 env_cargar(RAIZ . '/.env');
 

@@ -223,11 +223,24 @@ function politica_csp(): string
 /** Autoriza un origen externo en la CSP de esta respuesta. Sin argumentos, devuelve lo autorizado. */
 function csp_permitir(?string $directiva = null, string ...$origenes): array
 {
-    static $permitidos = [];
+    $permitidos = &csp_permitidos();
     if ($directiva !== null) {
         $permitidos[$directiva] = array_values(array_unique([...($permitidos[$directiva] ?? []), ...$origenes]));
     }
     return $permitidos;
+}
+
+function &csp_permitidos(): array
+{
+    static $permitidos = [];
+    return $permitidos;
+}
+
+/** Vuelve a la CSP estricta (lo usan las pruebas entre una página y otra). */
+function csp_reiniciar(): void
+{
+    $permitidos = &csp_permitidos();
+    $permitidos = [];
 }
 
 /** Valor aleatorio por petición que autoriza nuestros <script>/<style> en línea: <style nonce="<?= csp_nonce() ?>">. */

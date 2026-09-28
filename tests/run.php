@@ -19,6 +19,10 @@ putenv("RUTA_BD=$bdPruebas");
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 
+// Las pruebas ignoran el .env de tu computadora: solo usan lo definido arriba
+env_valores([]);
+config_todo(true);
+
 $GLOBALS['pruebas'] = [];
 
 function prueba(string $nombre, callable $funcion): void
@@ -58,6 +62,44 @@ function afirmar_falla(callable $funcion, string $mensaje = 'Se esperaba un erro
         return $error;
     }
     throw new AssertionError($mensaje);
+}
+
+/** Ejecuta $funcion con variables de configuración extra (ej. META_PIXEL_ID) y luego las quita. */
+function con_config(array $variables, callable $funcion): mixed
+{
+    foreach ($variables as $clave => $valor) {
+        putenv("$clave=$valor");
+    }
+    config_todo(true);
+    try {
+        return $funcion();
+    } finally {
+        foreach (array_keys($variables) as $clave) {
+            putenv($clave);
+        }
+        config_todo(true);
+    }
+}
+
+/** Prepara las variables de una petición simulada ($_POST, $_COOKIE, $_SERVER, $_GET). */
+function simular_peticion(array $post = [], array $cookies = [], array $servidor = [], array $get = []): void
+{
+    $_POST = $post;
+    $_COOKIE = $cookies;
+    $_GET = $get;
+    $_SERVER = $servidor + [
+        'REMOTE_ADDR' => '10.0.0.' . random_int(1, 250),
+        'HTTP_USER_AGENT' => 'Mozilla/5.0 (pruebas)',
+        'HTTP_HOST' => 'localhost',
+        'REQUEST_METHOD' => $post ? 'POST' : 'GET',
+        'REQUEST_URI' => '/',
+    ];
+}
+
+/** Formulario legítimo: el token CSRF del campo coincide con el de la cookie. */
+function post_legitimo(array $post, array $cookies = []): void
+{
+    simular_peticion($post + ['_csrf' => 'token-de-prueba-csrf'], $cookies + ['csrf' => 'token-de-prueba-csrf']);
 }
 
 /** Base de datos nueva en memoria, con todas las tablas, para una prueba. */

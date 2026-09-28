@@ -24,11 +24,13 @@ function fila_venta(int $compradorId, ?int $leadId = null, ?string $claveFormula
 
 prueba('las migraciones crean todas las tablas y no se aplican dos veces', function () {
     $pdo = db_conectar(':memory:');
-    afirmar_igual(['001_inicial.sql'], migrar($pdo));
+    $archivos = array_map('basename', glob(RAIZ . '/app/migraciones/*.sql') ?: []);
+    sort($archivos);
+    afirmar_igual($archivos, migrar($pdo));
     afirmar_igual([], migrar($pdo), 'La segunda vez no debe aplicar nada.');
 
     $tablas = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table'")->fetchAll(PDO::FETCH_COLUMN);
-    foreach (['leads', 'compradores', 'ventas', 'accesos', 'tokens_login', 'sesiones', 'eventos_meta', 'emails', 'limites', 'migraciones'] as $tabla) {
+    foreach (['leads', 'compradores', 'ventas', 'accesos', 'tokens_login', 'sesiones', 'eventos_meta', 'emails', 'limites', 'progreso', 'migraciones'] as $tabla) {
         afirmar(in_array($tabla, $tablas, true), "Falta la tabla $tabla.");
     }
 });

@@ -601,16 +601,29 @@ textarea {
 }
 
 .progreso {
+    display: block;
+    width: 100%;
     height: 8px;
-    margin-top: 12px;
+    margin-top: 14px;
     overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.progreso::-webkit-progress-bar {
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.15);
 }
 
-.progreso span {
-    display: block;
-    height: 100%;
+.progreso::-webkit-progress-value {
+    border-radius: 999px;
+    background: var(--wa);
+}
+
+.progreso::-moz-progress-bar {
     border-radius: 999px;
     background: var(--wa);
 }
@@ -748,4 +761,15 @@ textarea {
 .acceso__icono .icono {
     width: 28px;
     height: 28px;
+}
+
+/* Utilidades */
+
+.separado {
+    margin-top: 12px;
+}
+
+.error-campo {
+    color: var(--error);
+    font-weight: 600;
 }
