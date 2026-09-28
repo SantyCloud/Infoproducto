@@ -23,7 +23,8 @@ php -S localhost:8000 -t public_html public_html/index.php
 ```
 
 Abre http://localhost:8000 (landing) y http://localhost:8000/admin (panel). Sin Resend configurado,
-los emails se "simulan": el panel te muestra el enlace de acceso para probarlo.
+los emails se "simulan": el panel te muestra el enlace de acceso para probarlo. Para ver el detalle
+de los errores mientras pruebas, pon `ENTORNO=local` en tu `.env`.
 
 ## Pruebas automáticas
 

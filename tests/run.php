@@ -16,6 +16,8 @@ putenv('URL_SITIO=http://localhost');
 putenv('CLAVE_APP=clave-de-pruebas');
 putenv('ZONA_HORARIA=America/Guayaquil');
 putenv("RUTA_BD=$bdPruebas");
+$logsPruebas = sys_get_temp_dir() . '/infoproducto-logs-' . getmypid();
+putenv("RUTA_LOGS=$logsPruebas");
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 
@@ -67,15 +69,17 @@ function afirmar_falla(callable $funcion, string $mensaje = 'Se esperaba un erro
 /** Ejecuta $funcion con variables de configuración extra (ej. META_PIXEL_ID) y luego las quita. */
 function con_config(array $variables, callable $funcion): mixed
 {
+    $anteriores = [];
     foreach ($variables as $clave => $valor) {
+        $anteriores[$clave] = getenv($clave);
         putenv("$clave=$valor");
     }
     config_todo(true);
     try {
         return $funcion();
     } finally {
-        foreach (array_keys($variables) as $clave) {
-            putenv($clave);
+        foreach ($anteriores as $clave => $anterior) {
+            putenv($anterior === false ? $clave : "$clave=$anterior");
         }
         config_todo(true);
     }
@@ -105,6 +109,9 @@ function post_legitimo(array $post, array $cookies = []): void
 /** Base de datos nueva en memoria, con todas las tablas, para una prueba. */
 function bd_de_prueba(): PDO
 {
+    // Las tareas de fondo que dejó una prueba anterior no deben ejecutarse sobre la base nueva
+    $tareas = &tareas_de_fondo();
+    $tareas = [];
     $pdo = db_conectar(':memory:');
     migrar($pdo);
     return db($pdo);
@@ -135,6 +142,10 @@ foreach (['', '-wal', '-shm'] as $sufijo) {
     if (is_file($bdPruebas . $sufijo)) {
         unlink($bdPruebas . $sufijo);
     }
+}
+array_map('unlink', glob("$logsPruebas/*") ?: []);
+if (is_dir($logsPruebas)) {
+    rmdir($logsPruebas);
 }
 
 $total = count($GLOBALS['pruebas']);

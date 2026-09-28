@@ -146,13 +146,15 @@ prueba('los formularios sin token CSRF válido se rechazan', function () {
 
 prueba('exportar CSV: con BOM, separado por ; y sin fórmulas peligrosas', function () {
     bd_de_prueba();
-    venta_registrar(datos_venta(['nombre' => '=HYPERLINK("http://malo")']));
+    venta_registrar(datos_venta(['nombre' => '=HYPERLINK("http://malo")', 'referencia_pago' => 'x,=1+1; @SUMA(1)']));
     $token = sesion_crear('admin', null);
     simular_peticion([], [COOKIE_ADMIN => $token]);
     $csv = admin_exportar('ventas');
     afirmar_igual(200, $csv['estado']);
     afirmar(str_starts_with($csv['cuerpo'], "\xEF\xBB\xBF"), 'Debe empezar con BOM.');
     afirmar_contiene("'=HYPERLINK", $csv['cuerpo'], 'Las fórmulas se neutralizan con un apóstrofo.');
-    afirmar_contiene(';', $csv['cuerpo']);
+    afirmar_contiene("x,'=1+1; '@SUMA(1)", $csv['cuerpo'], 'También las que van después de una coma o un punto y coma.');
+    afirmar_igual('Pérez-López, 2026-09-28', celda_csv_segura('Pérez-López, 2026-09-28'), 'Los textos normales no cambian.');
+    afirmar_contiene('"id";"fecha";"nombre"', $csv['cuerpo'], 'Todos los campos van entre comillas y separados por ;');
     afirmar_igual(404, admin_exportar('contrasenas')['estado']);
 });

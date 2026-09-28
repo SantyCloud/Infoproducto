@@ -35,6 +35,9 @@ function config_todo(bool $recargar = false): array
             'db' => [
                 'ruta' => ruta_proyecto((string) env('RUTA_BD', 'storage/base.sqlite')),
             ],
+            'logs' => [
+                'carpeta' => ruta_proyecto((string) env('RUTA_LOGS', 'storage/logs')),
+            ],
             'admin' => [
                 'usuario' => (string) env('ADMIN_USUARIO', ''),
                 'clave_hash' => (string) env('ADMIN_CLAVE_HASH', ''),

@@ -10,6 +10,7 @@ declare(strict_types=1);
 // la respuesta tarde lo mismo y no delate si el usuario es correcto.
 const HASH_FALSO = '$2y$12$Mj7N5YtirIMEC66Bw9bf5e9eTjWZrY8bouGXeQ/pU.NfHHLXCTaxu';
 const LEADS_POR_PAGINA = 50;
+const COOKIE_DISPOSITIVO_ADMIN = 'admin_dispositivo';
 
 function admin_configurado(): bool
 {
@@ -65,22 +66,49 @@ function admin_entrar(): array
         return $rechazo;
     }
     $usuario = limpiar($_POST['usuario'] ?? '', 100);
-    $clave = is_string($_POST['clave'] ?? null) ? $_POST['clave'] : '';
+    $clave = texto_de($_POST['clave'] ?? null);
     $ip = ip_cliente();
-    if (!limite_permitir('admin-entrar:' . $ip, 5, 900) || !limite_permitir('admin-entrar', 30, 900)) {
+
+    // Sin dispositivo conocido: 5 intentos por IP cada 15 minutos. En un dispositivo donde el dueño
+    // ya entró antes, un contador propio: nadie puede bloquearlo equivocándose desde otras IP.
+    $dispositivo = texto_de($_COOKIE[COOKIE_DISPOSITIVO_ADMIN] ?? null);
+    $conocido = dispositivo_admin_conocido($dispositivo);
+    $claveLimite = $conocido
+        ? 'admin-entrar-dispositivo:' . substr(hash('sha256', $dispositivo), 0, 24)
+        : 'admin-entrar:' . ip_para_limites($ip);
+    if (!limite_permitir($claveLimite, $conocido ? 10 : 5, 900)) {
         registrar('seguridad', 'Demasiados intentos de acceso al panel', ['ip' => $ip]);
         return admin_formulario_acceso('Demasiados intentos. Espera 15 minutos y vuelve a probar.', $usuario, 429);
     }
+
+    // La contraseña se comprueba siempre contra el hash configurado: la respuesta tarda lo mismo
+    // sea correcto o no el usuario, así no se puede adivinar cuál es.
+    $claveCorrecta = password_verify($clave, admin_configurado() ? config('admin.clave_hash') : HASH_FALSO);
     $usuarioCorrecto = admin_configurado() && hash_equals(config('admin.usuario'), $usuario);
-    $claveCorrecta = password_verify($clave, $usuarioCorrecto ? config('admin.clave_hash') : HASH_FALSO);
-    if (!$usuarioCorrecto || !$claveCorrecta) {
-        registrar('seguridad', 'Intento fallido de acceso al panel', ['ip' => $ip, 'usuario' => $usuario]);
+    if (!$claveCorrecta || !$usuarioCorrecto) {
+        registrar('seguridad', 'Intento fallido de acceso al panel', ['ip' => $ip]);
         return admin_formulario_acceso('Usuario o contraseña incorrectos.', $usuario, 401);
     }
-    limite_reiniciar('admin-entrar:' . $ip);
+    limite_reiniciar($claveLimite);
     registrar('seguridad', 'Acceso al panel', ['ip' => $ip]);
-    $token = sesion_crear('admin', null);
-    return con_cookie(redireccion('/admin'), COOKIE_ADMIN, $token, DURACION_SESION_ADMIN, true, 'Strict', '/admin');
+    $respuesta = con_cookie(redireccion('/admin'), COOKIE_ADMIN, sesion_crear('admin', null), DURACION_SESION_ADMIN, true, 'Strict', '/admin');
+    return $conocido ? $respuesta
+        : con_cookie($respuesta, COOKIE_DISPOSITIVO_ADMIN, dispositivo_admin_nuevo(), 365 * 86400, true, 'Strict', '/admin');
+}
+
+/** Marca firmada (con CLAVE_APP) que recuerda un dispositivo donde el dueño ya entró. */
+function dispositivo_admin_nuevo(): string
+{
+    $id = token_aleatorio();
+    return $id . '.' . substr(hash_hmac('sha256', 'dispositivo-admin:' . $id, config('app.clave')), 0, 32);
+}
+
+function dispositivo_admin_conocido(string $valor): bool
+{
+    if (!preg_match('/^([A-Za-z0-9_-]{43})\.([a-f0-9]{32})$/', $valor, $m)) {
+        return false;
+    }
+    return hash_equals(substr(hash_hmac('sha256', 'dispositivo-admin:' . $m[1], config('app.clave')), 0, 32), $m[2]);
 }
 
 function admin_salir(): array
@@ -244,7 +272,7 @@ function admin_venta_formulario(): array
     if ($r = admin_requerido()) {
         return $r;
     }
-    $codigo = normalizar_codigo((string) ($_GET['codigo'] ?? ''));
+    $codigo = normalizar_codigo(texto_de($_GET['codigo'] ?? null));
     return admin_vista_formulario_venta([
         'codigo' => $codigo,
         'monto' => rtrim(rtrim(number_format(precio_actual(), 2, '.', ''), '0'), '.'),
@@ -392,7 +420,7 @@ function admin_comprador_accion(string $id, string $accion): array
         case 'editar':
             $nombre = limpiar($_POST['nombre'] ?? '', 100);
             $email = strtolower(limpiar($_POST['email'] ?? '', 190));
-            $whatsapp = (string) preg_replace('/\D/', '', (string) ($_POST['whatsapp'] ?? ''));
+            $whatsapp = (string) preg_replace('/\D/', '', texto_de($_POST['whatsapp'] ?? null));
             $notas = limpiar($_POST['notas'] ?? '', 1000);
             if ($nombre === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return admin_comprador($id, ['mensaje' => 'Revisa el nombre y el email.']);
@@ -461,7 +489,7 @@ function admin_acceso_crear(): array
     $valores = [
         'nombre' => limpiar($_POST['nombre'] ?? '', 100),
         'email' => strtolower(limpiar($_POST['email'] ?? '', 190)),
-        'whatsapp' => (string) preg_replace('/\D/', '', (string) ($_POST['whatsapp'] ?? '')),
+        'whatsapp' => (string) preg_replace('/\D/', '', texto_de($_POST['whatsapp'] ?? null)),
         'notas' => limpiar($_POST['notas'] ?? '', 1000),
         'enviar_email' => !empty($_POST['enviar_email']),
     ];
@@ -485,6 +513,16 @@ function admin_acceso_crear(): array
 
 /* ---------- Exportar CSV ---------- */
 
+/**
+ * Evita que Excel ejecute como fórmula un texto que empieza por = + - @. También revisa lo que va después
+ * de cada coma o punto y coma: si el Excel separa las columnas con otro carácter, ese trozo quedaría al
+ * inicio de una celda. Se neutraliza con un apóstrofo delante.
+ */
+function celda_csv_segura(mixed $valor): mixed
+{
+    return is_string($valor) ? (string) preg_replace('/(^|[,;\t\r\n])(\s*)([=+\-@])/', "$1$2'$3", $valor) : $valor;
+}
+
 function admin_exportar(string $tipo): array
 {
     if ($r = admin_requerido()) {
@@ -505,21 +543,19 @@ function admin_exportar(string $tipo): array
         return pagina_error(404, 'No encontrado', 'No se puede exportar eso.');
     }
     $filas = db_filas($consultas[$tipo]);
-    $salida = fopen('php://temp', 'w+');
-    fwrite($salida, "\xEF\xBB\xBF"); // BOM: Excel reconoce las tildes
+    // Todos los campos van entre comillas, aunque Excel use "," o ";" como separador
+    $linea = fn (array $campos): string =>
+        implode(';', array_map(fn ($v) => '"' . str_replace('"', '""', (string) $v) . '"', $campos)) . "\r\n";
+    $csv = "\xEF\xBB\xBF"; // BOM: Excel reconoce las tildes
     if ($filas) {
-        fputcsv($salida, array_keys($filas[0]), ';', '"', '');
+        $csv .= $linea(array_keys($filas[0]));
     }
     foreach ($filas as $fila) {
         if (isset($fila['fecha'])) {
             $fila['fecha'] = fecha_local($fila['fecha'], 'Y-m-d H:i');
         }
-        // Evita que Excel interprete como fórmula un texto que empieza por = + - @
-        $fila = array_map(fn ($v) => is_string($v) && preg_match('/^[=+\-@\t\r]/', $v) ? "'" . $v : $v, $fila);
-        fputcsv($salida, $fila, ';', '"', '');
+        $csv .= $linea(array_map('celda_csv_segura', $fila));
     }
-    rewind($salida);
-    $csv = (string) stream_get_contents($salida);
     return respuesta($csv, 200, [
         'Content-Type' => 'text/csv; charset=UTF-8',
         'Content-Disposition' => 'attachment; filename="' . $tipo . '-' . gmdate('Y-m-d') . '.csv"',

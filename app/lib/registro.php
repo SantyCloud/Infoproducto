@@ -15,7 +15,7 @@ function registrar(string $canal, string $mensaje, array $contexto = []): void
         ['fecha' => gmdate('Y-m-d H:i:s'), 'mensaje' => $mensaje] + $contexto,
         JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE
     );
-    $carpeta = RAIZ . '/storage/logs';
+    $carpeta = config('logs.carpeta');
     if (!is_dir($carpeta)) {
         @mkdir($carpeta, 0775, true);
     }

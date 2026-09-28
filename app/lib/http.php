@@ -151,7 +151,7 @@ function respuesta_de_error(Throwable $error): array
 {
     registrar('errores', $error->getMessage(), [
         'donde' => $error->getFile() . ':' . $error->getLine(),
-        'ruta' => $_SERVER['REQUEST_URI'] ?? '',
+        'ruta' => limpiar($_SERVER['REQUEST_URI'] ?? '', 300),
     ]);
     $detalle = es_produccion()
         ? 'Inténtalo de nuevo en unos minutos.'

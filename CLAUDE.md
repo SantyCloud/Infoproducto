@@ -33,7 +33,8 @@ Web de venta y entrega de un infoproducto: un **sistema/curso de reventa SMM** q
 | Medición | Pixel (PageView, Contact) + API de Conversiones (Contact con el mismo `event_id`; Purchase al registrar la venta) | Meta aprende de las ventas reales, aunque se cierren por WhatsApp. |
 | Purchase | `action_source=website` si la venta trae código (con URL, IP, navegador y fbc/fbp del clic); `chat` si no | Meta solo acepta eventos web con datos del navegador; sin clic de origen, la venta fue por chat. Graph API `v25.0` (configurable con `META_GRAPH_VERSION`). |
 | Privacidad | Medición por **interés legítimo** con aviso en el pie y derecho de oposición (no hay banner de cookies) | Menos fricción en la landing. **Pendiente de validar con un abogado** si algún país exige consentimiento previo. |
-| Emails sin clave | Sin `RESEND_API_KEY` los emails quedan "simulados" (log + panel) | Se puede probar todo en local; el panel muestra el enlace para enviarlo por WhatsApp. |
+| Emails sin clave | Sin `RESEND_API_KEY` los emails quedan "simulados" (log + panel) | Se puede probar todo en local; el panel muestra el enlace para enviarlo por WhatsApp. En producción el log no guarda el enlace. |
+| Límites | Panel: 5 intentos/15 min por IP (IPv6 por /64), sin contador global; el dispositivo donde el dueño ya entró (cookie `admin_dispositivo`, firmada con `CLAVE_APP`) tiene su propio contador. `/entrar`: 3 por email cada 15 min, 6 por email al día, 10 por IP cada 15 min y 60 emails al día en total. `/wa`: 30 leads nuevos por hora por IP | Que nadie pueda dejar al dueño fuera del panel ni gastar el cupo de Resend (100/día) que necesitan los emails de compra. Ver `SEGURIDAD.md`. |
 
 ## Estructura
 
@@ -50,7 +51,7 @@ app/                 código PHP (no accesible desde la web)
   paginas/           publico.php (landing, /wa, legales), miembros.php, admin.php
   vistas/            layouts (landing, admin, miembros, general), admin/, miembros/, emails/, parciales/
   migraciones/       001_inicial.sql, 002_progreso.sql…
-bin/                 instalar.php, crear-admin.php, optimizar-capturas.php, tareas.php (cron)
+bin/                 instalar.php, crear-admin.php, desbloquear-panel.php, optimizar-capturas.php, tareas.php (cron)
 contenido/           lo que edita el dueño:
   negocio.php        nombre, precios, promo, garantía, WhatsApp, métodos de pago, smmclixy, datos legales
   landing.php        todos los textos de la landing
@@ -81,6 +82,9 @@ Rutas: `/` landing · `/wa` botón de WhatsApp · `/terminos` `/privacidad` `/re
 - Los textos editables van solo en `contenido/` y los secretos solo en `.env`, que nunca se sube a Git.
 - Compatibilidad con **PHP 8.2** (Hostinger): no usar `json_validate`, `array_find`, property hooks, constantes tipadas ni otras novedades de 8.3/8.4.
 - Los avisos de PHP se convierten en excepciones (`app/bootstrap.php`), así que el código no debe generar warnings.
+- Datos del navegador (`$_GET`, `$_POST`, `$_COOKIE`, `$_SERVER`): leerlos con `limpiar()` o `texto_de()`, nunca con `(string)` (un `?b[]=1` llega como array y daría error 500). Los límites de intentos usan `ip_para_limites(ip_cliente())`.
+- No usar `Referrer-Policy: no-referrer` en páginas con formularios: el navegador los envía con `Origin: null` y `envio_legitimo()` los rechaza (para ocultar tokens, `same-origin`).
+- `.env.example` trae `ENTORNO=produccion` (errores sin detalle); en tu computadora, `ENTORNO=local`.
 - Cambios de base de datos: un archivo nuevo en `app/migraciones/`. Nunca se edita uno ya aplicado en producción.
 - Commits pequeños por fase, en español. Al terminar cada fase: pruebas en verde, capturas del celular y pasos para que el dueño lo pruebe.
 
@@ -89,6 +93,7 @@ Rutas: `/` landing · `/wa` botón de WhatsApp · `/terminos` `/privacidad` `/re
 ```bash
 php bin/instalar.php                                        # crea .env, carpetas y BD; aplica migraciones; optimiza capturas
 php bin/crear-admin.php                                     # usuario y contraseña del panel (hash en .env)
+php bin/desbloquear-panel.php                               # borra el bloqueo por "Demasiados intentos" del panel
 php bin/optimizar-capturas.php                              # solo capturas
 php bin/tareas.php                                          # lo que hace el cron: Meta, limpieza, respaldo diario
 php -S localhost:8000 -t public_html public_html/index.php  # web local → http://localhost:8000
@@ -96,7 +101,8 @@ php tests/run.php                                           # pruebas (incluye u
 ```
 
 Pruebas: ignoran el `.env` local; usan `con_config()` para activar Meta/Resend y `http_simulador()` para que
-ninguna llamada salga a internet. Si cambias la estructura de una tabla ya aplicada en local, borra
+ninguna llamada salga a internet. Los logs van a una carpeta temporal (`RUTA_LOGS`) y `bd_de_prueba()` descarta
+las tareas de fondo que dejó la prueba anterior. Si cambias la estructura de una tabla ya aplicada en local, borra
 `storage/base.sqlite` y ejecuta `php bin/instalar.php`.
 
 ## Fases

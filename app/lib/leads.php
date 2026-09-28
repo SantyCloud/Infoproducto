@@ -47,7 +47,7 @@ function datos_de_la_visita(array $consulta, array $cookies, array $servidor): a
     $mismoSitio = $referer !== '' && parse_url($referer, PHP_URL_HOST) === parse_url(config('app.url'), PHP_URL_HOST);
     return [
         'visitante_id' => visitante_valido($cookies['vis'] ?? null) ? $cookies['vis'] : bin2hex(random_bytes(16)),
-        'boton' => limpiar(preg_replace('/[^a-z0-9_-]/', '', strtolower((string) ($consulta['b'] ?? ''))) ?? '', 30),
+        'boton' => limpiar((string) preg_replace('/[^a-z0-9_-]/', '', strtolower(texto_de($consulta['b'] ?? null))), 30),
         'event_id' => event_id_valido($consulta['eid'] ?? null) ? $consulta['eid'] : nuevo_event_id(),
         'atribucion' => $atribucion,
         'fbc' => limpiar($cookies['_fbc'] ?? '', 600) ?: null,

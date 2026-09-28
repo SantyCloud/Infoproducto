@@ -6,6 +6,9 @@ declare(strict_types=1);
  * Sin una sesión válida (y un acceso vigente) no se ve nada.
  */
 
+// Tope diario de emails de /entrar: deja margen en el plan gratis de Resend (100/día) para los de compra
+const MAXIMO_EMAILS_LOGIN_DIA = 60;
+
 function miembro_sesion(): ?array
 {
     return sesion_de_token('miembro', $_COOKIE[COOKIE_MIEMBRO] ?? null);
@@ -48,15 +51,20 @@ function miembro_pedir_enlace(): array
         $datos['error'] = 'Escribe un email válido.';
         return privada(html(vista('miembros/entrar', $datos), 422));
     }
-    $ip = ip_cliente();
-    if (!limite_permitir('entrar-ip:' . $ip, 10, 900) || !limite_permitir('entrar-email:' . $email, 3, 900)) {
-        $datos['error'] = 'Ya pediste varios enlaces. Espera 15 minutos o revisa tu correo (también spam).';
+    if (!limite_permitir('entrar-ip:' . ip_para_limites(ip_cliente()), 10, 900)
+        || !limite_permitir('entrar-email:' . $email, 3, 900)
+        || !limite_permitir('entrar-email-dia:' . $email, 6, 86400)) {
+        $datos['error'] = 'Ya pediste varios enlaces. Espera un rato o revisa tu correo (también spam).';
         return privada(html(vista('miembros/entrar', $datos), 429));
     }
     $comprador = comprador_por_email($email);
     if ($comprador !== null && acceso_vigente((int) $comprador['id'])) {
-        // Se envía después de responder: así la respuesta tarda lo mismo exista o no el email
-        despues_de_responder(fn () => email_login($comprador, enlace_acceso_crear((int) $comprador['id'], 'login')));
+        if (limite_permitir('emails-login-dia', MAXIMO_EMAILS_LOGIN_DIA, 86400)) {
+            // Se envía después de responder: así la respuesta tarda lo mismo exista o no el email
+            despues_de_responder(fn () => email_login($comprador, enlace_acceso_crear((int) $comprador['id'], 'login')));
+        } else {
+            registrar('seguridad', 'Se alcanzó el tope diario de emails de /entrar');
+        }
     }
     $datos['enviado'] = true;
     return privada(html(vista('miembros/entrar', $datos)));
@@ -72,7 +80,9 @@ function miembro_acceso_confirmar(string $token): array
         'nombre' => $enlace !== null ? primer_nombre((string) $enlace['nombre']) : '',
         'token' => $token,
     ]), $enlace !== null ? 200 : 410);
-    $respuesta['cabeceras']['Referrer-Policy'] = 'no-referrer'; // el token no sale en el "Referer"
+    // El token no sale hacia otros sitios en el "Referer". No usar 'no-referrer': con esa política el
+    // navegador envía el botón con "Origin: null" y envio_legitimo() lo rechaza.
+    $respuesta['cabeceras']['Referrer-Policy'] = 'same-origin';
     return privada($respuesta);
 }
 

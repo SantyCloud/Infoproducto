@@ -154,6 +154,12 @@ function fecha_local(?string $fechaUtc, string $formato = 'd/m/Y H:i'): string
         ->format($formato);
 }
 
+/** Un dato que viene del navegador, como texto: si llega un array u otra cosa (p. ej. ?b[]=1), cuenta como vacío. */
+function texto_de(mixed $valor): string
+{
+    return is_string($valor) ? $valor : '';
+}
+
 /** Limpia un texto que viene de fuera: quita caracteres de control y lo recorta sin romper letras. */
 function limpiar(mixed $valor, int $maximo = 200): string
 {

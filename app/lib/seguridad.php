@@ -134,8 +134,11 @@ function envio_legitimo(array $post, array $cookies, array $servidor): bool
     if (!is_string($token) || !is_string($cookie) || $cookie === '' || !hash_equals($cookie, $token)) {
         return false;
     }
-    $origen = (string) ($servidor['HTTP_ORIGIN'] ?? '');
-    if ($origen !== '' && $origen !== 'null') {
+    $origen = texto_de($servidor['HTTP_ORIGIN'] ?? null);
+    if ($origen === 'null') {
+        return false; // formularios enviados desde marcos aislados o redirecciones raras
+    }
+    if ($origen !== '') {
         $host = parse_url($origen, PHP_URL_HOST) . (parse_url($origen, PHP_URL_PORT) ? ':' . parse_url($origen, PHP_URL_PORT) : '');
         return strcasecmp($host, (string) ($servidor['HTTP_HOST'] ?? '')) === 0;
     }

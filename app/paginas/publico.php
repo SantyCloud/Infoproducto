@@ -49,7 +49,7 @@ function pagina_whatsapp(): array
     $lead = null;
     $visita = datos_de_la_visita($_GET, $_COOKIE, $_SERVER);
     try {
-        if (!es_bot($visita['user_agent']) && limite_permitir('wa:' . $visita['ip'], 120, 600)) {
+        if (!es_bot($visita['user_agent']) && limite_permitir('wa:' . ip_para_limites($visita['ip']), 30, 3600)) {
             $lead = lead_registrar($visita);
         }
     } catch (Throwable $error) {

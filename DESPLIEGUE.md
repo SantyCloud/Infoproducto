@@ -82,10 +82,9 @@ php bin/instalar.php      # crea .env con una clave secreta, las carpetas y la b
 nano .env                 # edita (Ctrl+O para guardar, Ctrl+X para salir)
 ```
 
-En el `.env` cambia como mínimo:
+En el `.env` cambia como mínimo la dirección de tu web (`ENTORNO` ya viene en `produccion`):
 
 ```ini
-ENTORNO=produccion
 URL_SITIO=https://tudominio.com
 ```
 
@@ -213,7 +212,9 @@ En vez de entrar por SSH, puedes publicar desde GitHub (también desde la app de
 3. En GitHub → tu repo → **Settings → Secrets and variables → Actions**, crea estos secrets:
    `HOSTINGER_HOST` (IP), `HOSTINGER_PORT` (`65002`), `HOSTINGER_USER` (`uXXXXXXXXX`),
    `HOSTINGER_SSH_KEY` (contenido del archivo `hostinger-github`, la clave privada),
-   `HOSTINGER_RUTA` (`/home/uXXXXXXXXX/domains/tudominio.com`) y `HOSTINGER_PHP` (`/opt/alt/php83/usr/bin/php`).
+   `HOSTINGER_RUTA` (`/home/uXXXXXXXXX/domains/tudominio.com`), `HOSTINGER_PHP` (`/opt/alt/php83/usr/bin/php`) y
+   `HOSTINGER_KNOWN_HOSTS`: la huella de tu servidor, para que GitHub no se conecte a un impostor. Obtenla en tu
+   computadora con `ssh-keyscan -p 65002 IP-DE-TU-SERVIDOR` y pega todo lo que muestre.
 4. Para publicar: pestaña **Actions → Desplegar en Hostinger → Run workflow**. Primero corre las pruebas;
    si alguna falla, no publica nada.
 
@@ -225,3 +226,5 @@ Además, en cada cambio que subas, GitHub ejecuta las pruebas automáticamente (
 - **Emails:** `storage/logs/emails-AAAA-MM.log` y la ficha del comprador en el panel.
 - **Meta:** `storage/logs/meta-AAAA-MM.log`.
 - **Olvidaste la contraseña del panel:** `php bin/crear-admin.php` de nuevo.
+- **El panel dice "Demasiados intentos":** espera 15 minutos o ejecuta `php bin/desbloquear-panel.php`.
+  En el celular o la computadora donde ya entraste antes no te afecta: queda recordado.

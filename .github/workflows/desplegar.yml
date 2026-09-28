@@ -6,6 +6,7 @@
 #   HOSTINGER_SSH_KEY  clave privada cuya parte pública agregaste en hPanel → Acceso SSH → Claves SSH
 #   HOSTINGER_RUTA     carpeta del proyecto, ej. /home/uXXXXXXXXX/domains/tudominio.com
 #   HOSTINGER_PHP      ruta de PHP, ej. /opt/alt/php83/usr/bin/php
+#   HOSTINGER_KNOWN_HOSTS  huella del servidor: en tu computadora, ssh-keyscan -p 65002 IP (pega todo)
 name: Desplegar en Hostinger
 
 on:
@@ -19,12 +20,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HOST: ${{ secrets.HOSTINGER_HOST }}
+      HUELLAS: ${{ secrets.HOSTINGER_KNOWN_HOSTS }}
     steps:
       - uses: actions/checkout@v4
       - name: Pruebas antes de publicar
         run: php tests/run.php
       - name: Comprobar configuración
-        if: env.HOST == ''
+        if: env.HOST == '' || env.HUELLAS == ''
         run: |
           echo "Faltan los secrets HOSTINGER_* (ver el comentario al inicio de este archivo)."
           exit 1
@@ -38,6 +40,6 @@ jobs:
         run: |
           install -m 700 -d ~/.ssh
           printf '%s\n' "$CLAVE" > ~/.ssh/hostinger && chmod 600 ~/.ssh/hostinger
-          ssh-keyscan -p "$PUERTO" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          ssh -i ~/.ssh/hostinger -p "$PUERTO" "$USUARIO@$HOST" \
+          printf '%s\n' "$HUELLAS" > ~/.ssh/known_hosts   # solo se confía en la huella guardada
+          ssh -o StrictHostKeyChecking=yes -i ~/.ssh/hostinger -p "$PUERTO" "$USUARIO@$HOST" \
             "cd '$RUTA' && git pull --ff-only && '$PHP' bin/instalar.php"

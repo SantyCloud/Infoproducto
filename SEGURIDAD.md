@@ -15,9 +15,12 @@ se registran desde el panel, con sesión de administrador.
 
 | Riesgo | Protección | Prueba |
 |---|---|---|
-| Formularios enviados desde otra web (CSRF) | Token de doble envío (cookie + campo oculto) en **todos** los formularios POST, comprobación del `Origin` y cookies `SameSite` | `ventas`: "los formularios sin token CSRF válido se rechazan"; `http`: recorrido completo (403 sin token) |
-| Adivinar la contraseña del panel | Hash bcrypt en `.env`; máximo 5 intentos por IP y 30 en total cada 15 minutos; misma respuesta y mismo tiempo exista o no el usuario | `ventas`: "entrar al panel…se bloquea tras 5 intentos" |
-| Inflar las estadísticas con clics falsos a `/wa` | Límite por IP, se ignoran robots, un visitante conserva su código 7 días; la persona igual llega a WhatsApp | `leads`: límite de intentos y robots |
+| Formularios enviados desde otra web (CSRF) | Token de doble envío (cookie + campo oculto) en **todos** los formularios POST, comprobación del `Origin` (también se rechaza `Origin: null`) y cookies `SameSite` | `ventas`: "los formularios sin token CSRF válido se rechazan"; `seguridad`: Origin "null"; `http`: recorrido completo (403 sin token) |
+| Adivinar la contraseña del panel | Hash bcrypt en `.env` (mínimo 10 caracteres); 5 intentos cada 15 minutos por IP (en IPv6, por red /64); la contraseña se comprueba siempre contra el hash configurado, así la respuesta tarda lo mismo sea cual sea el usuario | `ventas`: "entrar al panel…se bloquea tras 5 intentos"; `seguridad`: "con usuario incorrecto también se comprueba la contraseña" |
+| Dejar al dueño fuera del panel fallando a propósito | No hay contador global: cada IP tiene el suyo, y el celular o la computadora donde ya entraste queda recordado (marca firmada con `CLAVE_APP`) con un contador propio. Si hiciera falta: `php bin/desbloquear-panel.php` | `seguridad`: "nadie puede bloquear al dueño…", "en un dispositivo donde ya entró…" |
+| Inflar las estadísticas con clics falsos a `/wa` | Máximo 30 leads nuevos por hora por IP (en IPv6, por red /64), se ignoran robots, un visitante conserva su código 7 días; la persona igual llega a WhatsApp, aunque mande parámetros raros | `leads`: límite de intentos y robots; `seguridad`: "/wa con parámetros o cookies raros…" |
+| Falsear la IP con la cabecera `X-Forwarded-For` | Se ignora, salvo con `CONFIAR_PROXY=true` (solo si usas Cloudflare u otro proxy); entonces se toma la **última** IP, la que agrega el proxy | `seguridad`: "con proxy de confianza…" |
+| Publicar desde GitHub hacia un servidor impostor | La huella del servidor se guarda como secret (`HOSTINGER_KNOWN_HOSTS`) y `ssh` exige que coincida | revisión de código |
 | Redirecciones abiertas | `/wa` solo redirige a `wa.me` con tu número y un mensaje codificado; el resto de redirecciones son rutas internas fijas | revisión de código |
 
 ## 2. Acceso sin pagar
@@ -47,18 +50,54 @@ se registran desde el panel, con sesión de administrador.
 | Riesgo | Protección | Prueba |
 |---|---|---|
 | Descargar `.env`, la base de datos o el código | Todo vive **fuera** de `public_html`; además `.htaccess` bloquea archivos ocultos y `storage/.htaccess` lo bloquea todo | `http`: "no se puede descargar nada privado" (incluye rutas con `../`) |
-| Errores que muestran rutas del servidor | En producción, página genérica, errores solo en `storage/logs/` y `display_errors` apagado | revisión de código |
+| Errores que muestran rutas del servidor | En producción, página genérica, errores solo en `storage/logs/` y `display_errors` apagado. `.env.example` trae `ENTORNO=produccion`: si olvidas cambiarlo, la web queda protegida igual | revisión de código |
+| Secretos o datos en los logs | En producción, los emails simulados (sin Resend) se guardan **sin** el enlace de acceso; los intentos fallidos del panel guardan la IP, no lo que se escribió como usuario; la ruta de cada error se recorta | `seguridad`: "en producción, los emails simulados no dejan enlaces…" |
 | Inyección de código en las páginas (XSS) | Todo dato se escapa (`e()`, `formato()`, `markdown()` escapa antes de dar formato; solo enlaces `http(s)`, `mailto` o rutas propias); CSP estricta con `nonce` y sin `unsafe-inline` | `vista`, `landing`: escape y enlaces peligrosos |
 | Inyección SQL | Todas las consultas con parámetros; los nombres de columnas se validan | `db`: "rechaza nombres de columna sospechosos" |
-| Saber quién compró (enumeración de emails) | `/entrar` responde igual exista o no el email; límite de pedidos por email e IP | `miembros`: "misma respuesta exista o no el email" |
-| Fórmulas maliciosas al abrir el CSV en Excel | Las celdas que empiezan por `= + - @` se neutralizan | `ventas`: "exportar CSV…" |
+| Saber quién compró (enumeración de emails) | `/entrar` responde igual, y en el mismo tiempo, exista o no el email (el email se envía después de responder); límite de pedidos por email e IP | `miembros`: "misma respuesta exista o no el email" |
+| Llenar de emails a un comprador o gastar el cupo de Resend | Por email: 3 enlaces cada 15 minutos y 6 al día. En total: 60 emails de `/entrar` al día, para que siempre quede cupo (100/día en el plan gratis) para los de compra | `seguridad`: "/entrar: tope diario por email y tope global…" |
+| Fórmulas maliciosas al abrir el CSV en Excel | Todo va entre comillas y se neutraliza con un apóstrofo cualquier `= + - @` al inicio del texto **o después de una coma o un punto y coma** (por si Excel separa las columnas con otro carácter) | `ventas`: "exportar CSV…" |
 | Datos personales enviados a Meta | Email, teléfono y nombre van en hash SHA-256; IP y navegador de los clics se borran a los 90 días (cron) | `meta`, `mantenimiento` |
 | Cookies robables | Sesiones `HttpOnly`, `Secure` con https, `SameSite` (`Strict` en el panel) | `ventas`: cookie del panel |
+| El enlace mágico en el "Referer" | La página del enlace usa `Referrer-Policy: same-origin`: el enlace nunca se envía a otros sitios. (No `no-referrer`: con esa política el navegador envía el botón con `Origin: null` y nadie podría entrar) | `seguridad`: Origin "null" |
 | Web incrustada en otra (clickjacking) | `frame-ancestors 'none'` y `X-Frame-Options: DENY` | `http`: cabeceras |
+
+## Revisión independiente (28-09-2026)
+
+Un segundo revisor atacó la web sin ver este documento: leyó todo el código y probó cada idea contra un
+servidor de prueba. **Conclusión: nadie puede conseguir acceso al curso sin que el dueño lo cree.** Encontró
+1 problema de gravedad media, 3 bajos y 6 informativos. Todos están corregidos, con una prueba automática
+(archivo `tests/seguridad_test.php` y otros), salvo lo que se indica.
+
+| # | Hallazgo | Gravedad | Estado |
+|---|---|---|---|
+| 1 | Cualquiera podía bloquear el panel al dueño equivocándose a propósito desde varias IP (había un contador global de 30 intentos) | Media | Corregido: sin contador global; contador por IP y por dispositivo conocido; `bin/desbloquear-panel.php` |
+| 2 | El tiempo de respuesta delataba si el usuario del panel era correcto (el hash falso y el real tenían distinto costo) | Baja | Corregido: la contraseña se comprueba siempre contra el hash configurado |
+| 3 | Se podían pedir enlaces de `/entrar` sin parar para un email: molestia al comprador y cupo de Resend agotado | Baja | Corregido: 6 por email al día y 60 en total al día |
+| 4 | Con `CONFIAR_PROXY=true`, la IP se podía falsear con `X-Forwarded-For` | Baja | Corregido: se usa la última IP; IPv6 por red /64 (y las IPv4 escritas como IPv6 cuentan como IPv4) |
+| 5 | `/wa?b[]=1` (parámetros como lista) daba error 500 y llenaba el log | Info | Corregido: `texto_de()` en todos los datos del navegador; la ruta del error se recorta |
+| 6 | Se podían crear muchos leads falsos (y eventos de clic hacia Meta) desde una IP | Info | Mitigado: 30 leads nuevos por hora por IP o red /64. Quien use muchas IP puede seguir inflando números; no da acceso a nada |
+| 7 | En el CSV, una fórmula después de una coma podía ejecutarse si Excel separa columnas con coma | Info | Corregido: se neutraliza también después de `,` y `;` |
+| 8 | Enlaces de acceso (emails simulados) y lo escrito como usuario del panel quedaban en los logs | Info | Corregido |
+| 9 | `.env.example` traía `ENTORNO=local` (errores con detalle si se olvidaba cambiarlo) | Info | Corregido: ahora trae `produccion` |
+| 10 | Defensa extra: se aceptaba `Origin: null`; el despliegue confiaba en la huella SSH que recibiera; las cookies no usan los prefijos `__Host-` | Info | `Origin: null` y la huella SSH, corregidos. Prefijos `__Host-`: **riesgo aceptado** (solo importaría si otra persona controlara un subdominio de tu dominio) |
+
+Al comprobar las correcciones en un navegador real (Chromium) apareció un problema nuevo que las pruebas no
+veían: la página del enlace mágico usaba `Referrer-Policy: no-referrer`, y con esa política el navegador envía
+el botón "Entrar" con `Origin: null`, que la corrección 10 rechaza. **Ningún comprador habría podido entrar.**
+Se cambió a `same-origin` y una prueba impide volver a `no-referrer`. Todos los formularios (panel, venta,
+enlace, salir, `/entrar`) se probaron de nuevo en Chromium.
+
+El revisor también confirmó que funcionan bien: enlaces y sesiones (256 bits, guardados como hash, uso atómico:
+12 envíos simultáneos del mismo enlace crearon 1 sola sesión), revocar, separación de sesiones de alumno y de
+admin, CSRF en las 12 rutas POST, sin redirecciones abiertas, sin salir de carpetas, `.env`/`.git`/`storage`
+inaccesibles, errores genéricos en producción, sin XSS, cookies y cabeceras, y SQL con parámetros.
 
 ## Recomendaciones para el dueño
 
 - Usa una **contraseña larga y única** para el panel (una frase de 4 o 5 palabras) y no la compartas.
+- Si el panel dice "Demasiados intentos" y no fuiste tú, alguien está probando contraseñas: no pasa nada
+  si la tuya es larga. Desde tu celular o computadora de siempre puedes seguir entrando.
 - Mantén el repositorio **privado** o, si es público, nunca subas el curso real ni capturas sin difuminar.
 - Descarga de vez en cuando una copia de `storage/respaldos/`.
 - Activa la verificación en dos pasos en Hostinger, GitHub, Resend y Meta.

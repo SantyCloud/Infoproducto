@@ -10,14 +10,32 @@ const CAMPOS_ATRIBUCION = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_cont
 
 function ip_cliente(): string
 {
-    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    $ip = texto_de($_SERVER['REMOTE_ADDR'] ?? null);
     if (config('app.confiar_proxy')) {
-        $reenviada = (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '');
-        if ($reenviada !== '') {
-            $ip = trim(explode(',', $reenviada)[0]);
+        // El último valor lo agrega nuestro proxy/CDN; los anteriores los puede escribir cualquiera
+        $saltos = array_map('trim', explode(',', texto_de($_SERVER['HTTP_X_FORWARDED_FOR'] ?? null)));
+        $ultimo = (string) end($saltos);
+        if ($ultimo !== '') {
+            $ip = $ultimo;
         }
     }
     return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '';
+}
+
+/**
+ * IP para contar intentos: las IPv6 se agrupan por su red /64, porque cada conexión
+ * doméstica o móvil recibe miles de direcciones seguidas.
+ */
+function ip_para_limites(string $ip): string
+{
+    if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        return $ip;
+    }
+    $binaria = (string) inet_pton($ip);
+    if (str_starts_with($binaria, str_repeat("\0", 10) . "\xFF\xFF")) {
+        return (string) inet_ntop(substr($binaria, 12)); // IPv4 escrita como IPv6 (::ffff:190.1.2.3)
+    }
+    return inet_ntop(substr($binaria, 0, 8) . str_repeat("\0", 8)) . '/64';
 }
 
 function agente_usuario(): string
@@ -64,7 +82,7 @@ function atribucion_de(array $consulta): array
 /** Lee la atribución guardada en la cookie 'atrib' (validando todo lo que trae). */
 function atribucion_guardada(array $cookies): array
 {
-    $datos = json_decode(base64url_decodificar((string) ($cookies['atrib'] ?? '')), true);
+    $datos = json_decode(base64url_decodificar(texto_de($cookies['atrib'] ?? null)), true);
     if (!is_array($datos)) {
         return [];
     }

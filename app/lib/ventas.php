@@ -15,13 +15,13 @@ function venta_validar(array $entrada): array
     $datos = [
         'nombre' => limpiar($entrada['nombre'] ?? '', 100),
         'email' => strtolower(limpiar($entrada['email'] ?? '', 190)),
-        'whatsapp' => (string) preg_replace('/\D/', '', (string) ($entrada['whatsapp'] ?? '')),
+        'whatsapp' => (string) preg_replace('/\D/', '', texto_de($entrada['whatsapp'] ?? null)),
         'monto' => str_replace(',', '.', limpiar($entrada['monto'] ?? '', 20)),
         'metodo_pago' => limpiar($entrada['metodo_pago'] ?? '', 60),
         'referencia_pago' => limpiar($entrada['referencia_pago'] ?? '', 120),
-        'codigo' => normalizar_codigo((string) ($entrada['codigo'] ?? '')),
+        'codigo' => normalizar_codigo(texto_de($entrada['codigo'] ?? null)),
         'enviar_email' => !empty($entrada['enviar_email']),
-        'clave_formulario' => preg_match('/^[A-Za-z0-9_-]{20,64}$/', (string) ($entrada['clave_formulario'] ?? ''))
+        'clave_formulario' => preg_match('/^[A-Za-z0-9_-]{20,64}$/', texto_de($entrada['clave_formulario'] ?? null))
             ? (string) $entrada['clave_formulario'] : null,
         'lead' => null,
     ];

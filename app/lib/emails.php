@@ -14,7 +14,9 @@ function email_enviar(string $tipo, array $comprador, string $asunto, string $ht
 {
     $para = (string) $comprador['email'];
     if (config('email.resend_api_key') === '') {
-        registrar('emails', "Email simulado ($tipo) para $para", ['asunto' => $asunto, 'texto' => $texto]);
+        // En tu computadora se guarda el texto completo para probar; en producción, sin los enlaces de acceso
+        $paraElLog = es_produccion() ? (string) preg_replace('#/acceso/[A-Za-z0-9_-]+#', '/acceso/[oculto]', $texto) : $texto;
+        registrar('emails', "Email simulado ($tipo) para $para", ['asunto' => $asunto, 'texto' => $paraElLog]);
         $resultado = ['ok' => true, 'simulado' => true, 'id' => null, 'error' => null];
     } else {
         $cabeceras = ['Authorization: Bearer ' . config('email.resend_api_key')];
