@@ -114,6 +114,21 @@ prueba('si Meta falla, el evento queda en error y se reintenta después; los muy
     });
 });
 
+prueba('el evento del clic se puede cambiar a Lead o InitiateCheckout (y solo a esos)', function () {
+    bd_de_prueba();
+    con_config(CONFIG_META + ['META_EVENTO_CLIC' => 'InitiateCheckout'], function () {
+        $llamadas = [];
+        simular_meta($llamadas);
+        meta_contact_para_lead(lead_registrar(visita_de_prueba()));
+        ejecutar_tareas_de_fondo();
+        afirmar_igual('InitiateCheckout', $llamadas[0]['datos']['data'][0]['event_name']);
+        http_simulador(quitar: true);
+    });
+    con_config(['META_EVENTO_CLIC' => 'Purchase'], function () {
+        afirmar_igual('Contact', config('meta.evento_clic'), 'Un valor no permitido vuelve a Contact.');
+    });
+});
+
 prueba('un evento no se envía dos veces aunque se intente a la vez', function () {
     bd_de_prueba();
     con_config(CONFIG_META, function () {

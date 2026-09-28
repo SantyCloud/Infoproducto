@@ -93,14 +93,18 @@ function meta_datos_usuario(?array $lead, ?array $comprador = null): array
 
 /* ---------- Eventos ---------- */
 
-/** Contact: alguien tocó el botón de WhatsApp (se envía después de redirigirlo). */
+/**
+ * Clic al botón de WhatsApp (Contact por defecto; ver META_EVENTO_CLIC). Se envía después de
+ * redirigir a la persona, con el mismo event_id que el Pixel.
+ */
 function meta_contact_para_lead(array $lead): ?int
 {
     if (!meta_capi_activa()) {
         return null;
     }
-    $id = meta_encolar('Contact', [
-        'event_name' => 'Contact',
+    $evento = config('meta.evento_clic');
+    $id = meta_encolar($evento, [
+        'event_name' => $evento,
         'event_time' => strtotime($lead['creado_en'] . ' UTC'),
         'event_id' => $lead['event_id'],
         'action_source' => 'website',

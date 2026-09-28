@@ -32,7 +32,7 @@
     </script>
     <?php endif; ?>
 </head>
-<body>
+<body data-evento-clic="<?= e(config('meta.evento_clic')) ?>">
 <?= $cuerpo ?>
 <script src="<?= e(asset('js/landing.js')) ?>" defer></script>
 </body>

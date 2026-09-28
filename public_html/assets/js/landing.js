@@ -42,7 +42,7 @@
         var destino = enlace.getAttribute('href') + '&eid=' + encodeURIComponent(eid);
         var hayPixel = typeof window.fbq === 'function';
         if (hayPixel && !contactoReciente()) {
-            window.fbq('track', 'Contact', {}, { eventID: eid });
+            window.fbq('track', document.body.getAttribute('data-evento-clic') || 'Contact', {}, { eventID: eid });
         }
         marcarContacto();
         evento.preventDefault();

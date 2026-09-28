@@ -49,6 +49,9 @@ function config_todo(bool $recargar = false): array
                 'token' => (string) env('META_CAPI_TOKEN', ''),
                 'test_event_code' => (string) env('META_TEST_EVENT_CODE', ''),
                 'version' => (string) env('META_GRAPH_VERSION', 'v25.0'),
+                // Evento del clic al botón de WhatsApp: Contact (recomendado), Lead o InitiateCheckout
+                'evento_clic' => in_array(env('META_EVENTO_CLIC'), ['Contact', 'Lead', 'InitiateCheckout'], true)
+                    ? (string) env('META_EVENTO_CLIC') : 'Contact',
             ],
         ];
     }
