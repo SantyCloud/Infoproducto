@@ -57,7 +57,7 @@ function formato(string $texto): string
 
 /**
  * Convierte Markdown sencillo en HTML seguro (todo el texto se escapa primero).
- * Admite: # títulos, párrafos, listas (- y 1.), > citas, **negrita**, *cursiva* y [enlaces](https://…).
+ * Admite: # títulos, párrafos, listas (- y 1.), > citas, **negrita**, *cursiva*, `código` y [enlaces](https://…).
  */
 function markdown(string $texto): string
 {
@@ -114,7 +114,7 @@ function markdown(string $texto): string
     return implode("\n", $bloques);
 }
 
-/** Formato dentro de una línea de Markdown: escapa y aplica enlaces, **negrita** y *cursiva*. */
+/** Formato dentro de una línea de Markdown: escapa y aplica enlaces, `código`, **negrita** y *cursiva*. */
 function markdown_linea(string $texto): string
 {
     $html = preg_replace_callback('/\[([^\]]+)\]\(([^)\s]+)\)/u', function (array $m): string {
@@ -125,6 +125,7 @@ function markdown_linea(string $texto): string
         $externo = preg_match('#^https?://#i', $url) ? ' target="_blank" rel="noopener noreferrer"' : '';
         return '<a href="' . e($url) . '"' . $externo . '>' . $m[1] . '</a>';
     }, e($texto));
+    $html = preg_replace('/`([^`]+)`/u', '<code>$1</code>', (string) $html);
     $html = preg_replace('/\*\*(.+?)\*\*/u', '<strong>$1</strong>', (string) $html);
     $html = preg_replace('/(?<![*\w])\*(?![\s*])(.+?)(?<![\s*])\*(?![*\w])/u', '<em>$1</em>', (string) $html);
     return (string) $html;

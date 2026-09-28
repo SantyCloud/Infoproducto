@@ -57,3 +57,17 @@ function env(string $clave, ?string $defecto = null): ?string
     }
     return ($valor === null || $valor === '') ? $defecto : $valor;
 }
+
+/**
+ * Pone CLAVE=valor en el texto de un .env: reemplaza la línea si existe o la agrega al final.
+ * El valor va entre comillas simples para que se lea tal cual (sirve para hashes con $).
+ */
+function env_poner(string $texto, string $clave, string $valor): string
+{
+    $linea = $clave . "='" . str_replace("'", '', $valor) . "'";
+    $patron = '/^' . preg_quote($clave, '/') . '=.*$/m';
+    if (preg_match($patron, $texto)) {
+        return (string) preg_replace_callback($patron, fn () => $linea, $texto, 1);
+    }
+    return rtrim($texto, "\n") . "\n" . $linea . "\n";
+}

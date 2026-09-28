@@ -117,7 +117,7 @@ CREATE TABLE emails (
     tipo            TEXT    NOT NULL,        -- acceso, login
     destinatario    TEXT    NOT NULL,
     proveedor_id    TEXT,                    -- id que devuelve Resend
-    estado          TEXT    NOT NULL CHECK (estado IN ('enviado', 'error')),
+    estado          TEXT    NOT NULL CHECK (estado IN ('enviado', 'simulado', 'error')),
     error           TEXT,
     creado_en       TEXT    NOT NULL
 );
