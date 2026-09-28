@@ -55,7 +55,8 @@ function miembro_pedir_enlace(): array
     }
     $comprador = comprador_por_email($email);
     if ($comprador !== null && acceso_vigente((int) $comprador['id'])) {
-        email_login($comprador, enlace_acceso_crear((int) $comprador['id'], 'login'));
+        // Se envía después de responder: así la respuesta tarda lo mismo exista o no el email
+        despues_de_responder(fn () => email_login($comprador, enlace_acceso_crear((int) $comprador['id'], 'login')));
     }
     $datos['enviado'] = true;
     return privada(html(vista('miembros/entrar', $datos)));

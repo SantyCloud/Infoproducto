@@ -73,6 +73,8 @@ prueba('pedir enlace: misma respuesta exista o no el email (no revela quién com
         str_replace('ana@correo.com', 'X', strip_tags($existe['cuerpo'])),
         str_replace('nadie@correo.com', 'X', strip_tags($noExiste['cuerpo']))
     );
+    afirmar_igual(0, (int) db_valor("SELECT COUNT(*) FROM emails"), 'El email no se envía mientras se responde (mismo tiempo de respuesta).');
+    ejecutar_tareas_de_fondo();
     afirmar_igual(1, (int) db_valor("SELECT COUNT(*) FROM emails WHERE tipo = 'login'"), 'Solo se envía email a quien tiene acceso.');
 });
 
