@@ -36,7 +36,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
             <div class="precio-linea">
                 <?php if ($promo): ?><span class="precio-antes"><?= e($precio_normal) ?></span><?php endif; ?>
                 <span class="precio-ahora"><?= e($precio) ?></span>
-                <?php if ($promo && $descuento > 0): ?><span class="chip-promo">−<?= $descuento ?>%</span><?php endif; ?>
+                <?php if ($promo && $descuento > 0): ?><span class="chip-promo"><?= formato($l['promo']['etiqueta'] ?? '−' . $descuento . '%') ?></span><?php endif; ?>
             </div>
 
             <?= $boton($l['hero']['boton'], 'hero', 'boton-wa--pulso') ?>

@@ -3,7 +3,7 @@
  * TEXTOS DE LA LANDING (la página de venta), en orden de arriba abajo.
  *
  * - Variables que se reemplazan solas con los datos de negocio.php:
- *   {producto} {precio} {precio_normal} {promo_nombre} {promo_fin} {garantia_dias} {metodos_pago}
+ *   {producto} {precio} {precio_normal} {ahorro} {descuento} {promo_nombre} {promo_fin} {garantia_dias} {metodos_pago}
  * - Para resaltar palabras usa **dos asteriscos**.
  * - Lo que está [entre corchetes] es un ejemplo: cámbialo por tu información real.
  * - Si dejas una lista vacía ([]), esa parte no se muestra.
@@ -24,6 +24,9 @@ return [
     'promo' => [
         'barra' => '🔥 {promo_nombre}: **{precio}** (antes {precio_normal})',
         'despues' => 'Después vuelve a {precio_normal}.',
+        // Etiqueta amarilla junto al precio. {ahorro} = cuánto ahorra ($5) · {descuento} = porcentaje (33%).
+        // Ejemplos: 'Ahorra {ahorro}' · '−{descuento}' · 'Ahorra {ahorro} ({descuento})'
+        'etiqueta' => 'Ahorra {ahorro}',
     ],
 
     'hero' => [

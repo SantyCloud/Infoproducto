@@ -44,6 +44,13 @@ function porcentaje_descuento(?array $negocio = null, ?DateTimeImmutable $moment
     return max(0, (int) round(($normal - precio_actual($negocio, $momento)) / $normal * 100));
 }
 
+/** Cuánto se ahorra con la promo vigente (15 → 10 = 5). 0 si no hay promo. */
+function ahorro_promo(?array $negocio = null, ?DateTimeImmutable $momento = null): float
+{
+    $negocio ??= contenido('negocio');
+    return max(0.0, round((float) $negocio['precio_normal'] - precio_actual($negocio, $momento), 2));
+}
+
 /** 10 → "$10" · 12.5 → "$12.50" */
 function formatear_precio(float|int $monto): string
 {

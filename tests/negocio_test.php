@@ -26,6 +26,17 @@ prueba('una promo sin fecha de fin sigue vigente', function () {
     afirmar_igual(10.0, precio_actual(negocio_de_prueba(['activa' => true, 'precio' => 10, 'termina' => null])));
 });
 
+prueba('el ahorro y el descuento de la promo se calculan del precio normal y el de promo', function () {
+    $conPromo = negocio_de_prueba(['activa' => true, 'precio' => 10, 'termina' => null]);
+    afirmar_igual(5.0, ahorro_promo($conPromo));
+    afirmar_igual('$5', variables_texto($conPromo + contenido('negocio'))['{ahorro}']);
+    afirmar_igual('33%', variables_texto($conPromo + contenido('negocio'))['{descuento}']);
+    afirmar_igual(5.01, ahorro_promo(negocio_de_prueba(['activa' => true, 'precio' => 9.99, 'termina' => null])));
+    $sinPromo = negocio_de_prueba(['activa' => false, 'precio' => 10, 'termina' => null]);
+    afirmar_igual(0.0, ahorro_promo($sinPromo));
+    afirmar_igual('0%', variables_texto($sinPromo + contenido('negocio'))['{descuento}']);
+});
+
 prueba('formatea los precios en dólares', function () {
     afirmar_igual('$10', formatear_precio(10));
     afirmar_igual('$12.50', formatear_precio(12.5));
