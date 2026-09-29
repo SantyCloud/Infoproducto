@@ -1157,6 +1157,26 @@ h2 strong {
     cursor: pointer;
 }
 
+/* Celulares muy angostos (menos de 360 px): lo que recibe sigue en una línea por punto */
+
+@media (max-width: 359px) {
+    .contenedor {
+        padding: 0 16px;
+    }
+
+    .ventajas {
+        gap: 6px 10px;
+        font-size: 0.8rem;
+    }
+
+    .galeria {
+        margin: 0 -16px;
+        padding-right: 16px;
+        padding-left: 16px;
+        scroll-padding: 0 16px;
+    }
+}
+
 /* Pantallas grandes */
 
 @media (min-width: 900px) {
