@@ -22,22 +22,26 @@ Quien vende {producto} es **{titular}**. En estos términos, "nosotros" se refie
 
 ## Qué compras
 
-{producto} es un curso digital con videos, textos y plantillas descargables. Enseña a montar un pequeño negocio de reventa de servicios de marketing para redes sociales, conocidos como "servicios SMM" (por ejemplo, seguidores, likes o vistas), usando la plataforma smmclixy.com como proveedor mayorista. Con la compra recibes acceso personal al área de miembros, donde está todo el contenido.
+{producto} es un curso digital en video. Enseña a montar un pequeño negocio de reventa de servicios de marketing para redes sociales, conocidos como "servicios SMM" (por ejemplo, seguidores, likes o vistas). Con la compra recibes acceso personal al área de miembros, donde encuentras:
+
+- El método completo.
+- El acceso a la web de proveedor donde se compran los servicios.
+- Los cursos de cómo usar el sistema y de cómo crear anuncios.
 
 La compra **no** incluye:
 
 - Los servicios SMM en sí (seguidores, likes, vistas u otros).
-- Saldo ni servicios en smmclixy.com.
+- Saldo ni servicios en la web de proveedor.
 - Una garantía de ingresos o de resultados.
 
-## Sobre smmclixy.com
+## Sobre la web de proveedor
 
-[smmclixy.com](https://smmclixy.com) es el panel de servicios SMM del autor de {producto}. Es un servicio separado del curso, con sus propios términos, condiciones y precios.
+Dentro del curso te indicamos la web de proveedor que usamos, que es del autor de {producto}. Es un servicio separado del curso, con sus propios términos, condiciones y precios.
 
-- El curso usa smmclixy.com como ejemplo de proveedor, pero no estás obligado a usarlo: puedes aplicar lo aprendido con el proveedor que prefieras.
-- Crear una cuenta en smmclixy.com es gratis y voluntario.
+- No estás obligado a usarla: puedes aplicar lo aprendido con el proveedor que prefieras.
+- Crear una cuenta es gratis y voluntario.
 - Si decides operar, recargas tu propio saldo allí. Ese saldo no está incluido en el precio del curso.
-- Tu cuenta, tus recargas y tus pedidos en smmclixy.com se rigen por los términos de smmclixy.com, no por estos.
+- Tu cuenta, tus recargas y tus pedidos en esa web se rigen por sus propios términos, no por estos.
 
 ## Precios y promociones
 

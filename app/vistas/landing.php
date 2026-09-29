@@ -70,24 +70,28 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
                     </div>
                 <?php endif; ?>
             </div>
-            <?php if (!$capturas['demanda']): ?><p class="ilustrativo">Ejemplo ilustrativo</p><?php endif; ?>
+            <?php if (!$capturas['demanda']): ?>
+                <p class="ilustrativo">Ejemplo ilustrativo</p>
+            <?php elseif (!empty($l['hero']['pie_captura'])): ?>
+                <p class="ilustrativo"><?= formato($l['hero']['pie_captura']) ?></p>
+            <?php endif; ?>
         </div>
     </div>
 </header>
 
 <main>
-    <section class="seccion" id="demanda">
-        <div class="contenedor">
-            <div class="seccion__cabecera">
-                <h2><?= formato($l['demanda']['titulo']) ?></h2>
-                <p><?= formato($l['demanda']['texto']) ?></p>
-            </div>
-            <?php $masMensajes = array_slice($capturas['demanda'], 1); // la primera ya se ve en el celular de la portada ?>
-            <?php if ($masMensajes || !$capturas['demanda']): ?>
+    <?php $masMensajes = array_slice($capturas['demanda'], 1); // la primera ya se ve en el celular de la portada ?>
+    <?php if ($masMensajes || (!$capturas['demanda'] && $mostrar_huecos)): ?>
+        <section class="seccion" id="demanda">
+            <div class="contenedor">
+                <div class="seccion__cabecera">
+                    <h2><?= formato($l['demanda']['titulo']) ?></h2>
+                    <p><?= formato($l['demanda']['texto']) ?></p>
+                </div>
                 <?= $galeria($masMensajes, 'Mensajes de clientes pidiendo servicios', 'Aquí van tus capturas de mensajes: súbelas como mensajes-1.jpg, mensajes-2.jpg…') ?>
-            <?php endif; ?>
-        </div>
-    </section>
+            </div>
+        </section>
+    <?php endif; ?>
 
     <?php if ($l['problema']['puntos']): ?>
         <section class="seccion seccion--alt" id="problema">
@@ -115,6 +119,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
         </section>
     <?php endif; ?>
 
+    <?php if (!empty($l['como_funciona']['pasos'])): ?>
     <section class="seccion seccion--alt" id="como-funciona">
         <div class="contenedor">
             <div class="seccion__cabecera">
@@ -131,13 +136,16 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
             </ol>
         </div>
     </section>
+    <?php endif; ?>
 
+    <?php if (!empty($l['modulos']['lista']) || !empty($l['bonos']['lista'])): ?>
     <section class="seccion" id="modulos">
         <div class="contenedor">
             <div class="seccion__cabecera">
                 <h2><?= formato($l['modulos']['titulo']) ?></h2>
                 <p><?= formato($l['modulos']['texto']) ?></p>
             </div>
+            <?php if (!empty($l['modulos']['lista'])): ?>
             <ol class="modulos">
                 <?php foreach ($l['modulos']['lista'] as $i => $modulo): ?>
                     <li class="modulo">
@@ -149,8 +157,9 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
                     </li>
                 <?php endforeach; ?>
             </ol>
+            <?php endif; ?>
 
-            <?php if ($l['bonos']['lista']): ?>
+            <?php if (!empty($l['bonos']['lista'])): ?>
                 <h3 class="bonos__titulo"><?= icono('regalo') ?> <?= formato($l['bonos']['titulo']) ?></h3>
                 <ul class="bonos">
                     <?php foreach ($l['bonos']['lista'] as $bono): ?>
@@ -163,6 +172,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
             <?php endif; ?>
         </div>
     </section>
+    <?php endif; ?>
 
     <?php if ($capturas['resultados'] || $mostrar_huecos): ?>
         <section class="seccion seccion--alt" id="resultados">
@@ -177,6 +187,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
         </section>
     <?php endif; ?>
 
+    <?php if (!empty($l['para_quien']['si']) || !empty($l['para_quien']['no'])): ?>
     <section class="seccion" id="para-quien">
         <div class="contenedor">
             <div class="seccion__cabecera"><h2><?= formato($l['para_quien']['titulo']) ?></h2></div>
@@ -200,6 +211,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
             </div>
         </div>
     </section>
+    <?php endif; ?>
 
     <?php if ($capturas['testimonios'] || $l['testimonios']['lista']): ?>
         <section class="seccion seccion--alt" id="testimonios">

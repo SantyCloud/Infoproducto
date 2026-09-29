@@ -52,12 +52,12 @@ prueba('sin garantía se quitan las frases que la mencionan', function () {
     afirmar(!str_contains($json, '{garantia_dias}'), 'Quedaron menciones de la garantía.');
 });
 
-prueba('la landing muestra todas las secciones, el precio tachado y botones a /wa', function () {
+prueba('la landing muestra la oferta, el cierre y botones a /wa', function () {
     bd_de_prueba();
     $respuesta = pagina_inicio();
     afirmar_igual(200, $respuesta['estado']);
     $html = $respuesta['cuerpo'];
-    foreach (['demanda', 'como-funciona', 'modulos', 'para-quien', 'oferta', 'faq', 'cierre'] as $seccion) {
+    foreach (['oferta', 'cierre'] as $seccion) {
         afirmar_contiene('id="' . $seccion . '"', $html, "Falta la sección $seccion.");
     }
     foreach (['hero', 'oferta', 'cierre', 'barra'] as $boton) {
@@ -92,6 +92,46 @@ prueba('la primera captura de mensajes va en el celular de la portada y no se re
     $html = vista('landing', $datos, 'layout_landing');
     afirmar_contiene('Ejemplo ilustrativo', $html, 'Sin capturas, el celular dibujado lo aclara.');
     afirmar_contiene('class="hueco"', $html, 'Y en local se ve dónde van las capturas.');
+});
+
+prueba('las secciones con la lista vacía no se muestran (la página queda corta) y con contenido sí', function () {
+    $landing = contenido('landing');
+    $landing['problema']['puntos'] = $landing['como_funciona']['pasos'] = $landing['modulos']['lista'] = [];
+    $landing['bonos']['lista'] = $landing['para_quien']['si'] = $landing['para_quien']['no'] = $landing['faq']['lista'] = [];
+    $datos = datos_landing(contenido('negocio'), $landing);
+    $html = vista('landing', $datos, 'layout_landing');
+    foreach (['problema', 'como-funciona', 'modulos', 'para-quien', 'faq'] as $seccion) {
+        afirmar(!str_contains($html, 'id="' . $seccion . '"'), "La sección $seccion debería estar oculta.");
+    }
+
+    $landing['como_funciona']['pasos'] = [['titulo' => 'Paso', 'texto' => 'Texto']];
+    $landing['modulos']['lista'] = [['titulo' => 'Módulo', 'texto' => 'Texto']];
+    $landing['para_quien']['si'] = ['Quieres empezar'];
+    $html = vista('landing', datos_landing(contenido('negocio'), $landing), 'layout_landing');
+    foreach (['como-funciona', 'modulos', 'para-quien'] as $seccion) {
+        afirmar_contiene('id="' . $seccion . '"', $html, "Con contenido, la sección $seccion se muestra.");
+    }
+});
+
+prueba('las páginas públicas no nombran la web de proveedor (se revela solo dentro del curso)', function () {
+    $host = (string) parse_url((string) (contenido('negocio')['smmclixy']['url_registro'] ?? ''), PHP_URL_HOST);
+    $nombre = strtolower((string) preg_replace('/^www\./', '', explode('.', preg_replace('/^www\./', '', $host))[0] ?? ''));
+    if ($nombre === '') {
+        return; // sin web de proveedor configurada no hay nada que ocultar
+    }
+    bd_de_prueba();
+    simular_peticion();
+    $paginas = ['landing' => pagina_inicio()];
+    foreach (array_keys(paises()) as $pais) {
+        $paginas["/$pais"] = pagina_pais($pais);
+    }
+    foreach (['terminos', 'privacidad'] as $legal) {
+        $paginas[$legal] = pagina_legal($legal);
+    }
+    $paginas['reembolsos'] = pagina_reembolsos();
+    foreach ($paginas as $pagina => $respuesta) {
+        afirmar(!str_contains(strtolower($respuesta['cuerpo']), $nombre), "$pagina menciona $nombre.");
+    }
 });
 
 prueba('la landing guarda de qué anuncio viene la visita (UTM, fbclid y visitante)', function () {

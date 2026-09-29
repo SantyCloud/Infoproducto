@@ -6,7 +6,8 @@ Guía del proyecto para retomarlo en futuras sesiones. Todo en **español**: có
 
 Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso que enseña a montar un negocio revendiendo servicios SMM (seguidores, likes, vistas…) con **smmclixy.com** (el panel del dueño) como proveedor.
 
-- Doble objetivo: vender el curso y que cada comprador se registre en smmclixy.com.
+- Doble objetivo: vender el curso y que cada comprador se registre en smmclixy.com. **smmclixy no se nombra en las páginas públicas** (landing y legales dicen "la web de proveedor"): se revela dentro del curso (email de acceso y área de miembros). Una prueba lo vigila.
+- Lo que recibe el comprador: el método, acceso a la web (de proveedor), un curso de cómo usar el sistema y otro de cómo crear anuncios.
 - Tráfico: anuncios de Meta (Instagram/Facebook), casi todo desde el celular, en Latinoamérica.
 - Precio: $15 normal, $10 en promoción con fecha de fin real. En México, en pesos: $300 → $200 MXN.
 - Una página por país para los anuncios: `/ec` (Ecuador) y `/mx` (México), con el mismo contenido.
@@ -83,6 +84,7 @@ Rutas: `/` landing general · `/ec`, `/mx` landing por país · `/wa` botón de 
 - En las vistas, todo dato va escapado: `<?= e($dato) ?>`. Hay CSP: los `<script>` y `<style>` en línea necesitan `nonce="<?= csp_nonce() ?>"`.
 - Fechas en la BD en **UTC** (`Y-m-d H:i:s`, con `ahora_bd()`); se muestran en `ZONA_HORARIA` (America/Guayaquil). Dinero en **centavos** (INTEGER) y **siempre con su moneda** (`ventas.moneda`): nunca sumar monedas distintas (`formatear_montos()`); precios con `negocio_de_pais()` + `formatear_precio($monto, $moneda)`.
 - Los textos editables van solo en `contenido/` y los secretos solo en `.env`, que nunca se sube a Git.
+- La landing es **corta y directa** (pedido del dueño): portada, historia breve, resultados, "Todo lo que recibes", 5 preguntas y cierre. Las demás secciones (problema, cómo funciona, módulos, ¿es para ti?) se ocultan con su lista vacía en `contenido/landing.php` y vuelven al llenarla.
 - Compatibilidad con **PHP 8.2** (Hostinger): no usar `json_validate`, `array_find`, property hooks, constantes tipadas ni otras novedades de 8.3/8.4.
 - Los avisos de PHP se convierten en excepciones (`app/bootstrap.php`), así que el código no debe generar warnings.
 - Datos del navegador (`$_GET`, `$_POST`, `$_COOKIE`, `$_SERVER`): leerlos con `limpiar()` o `texto_de()`, nunca con `(string)` (un `?b[]=1` llega como array y daría error 500). Los límites de intentos usan `ip_para_limites(ip_cliente())`.
