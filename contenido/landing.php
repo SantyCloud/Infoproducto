@@ -43,7 +43,7 @@ return [
     ],
 
     'demanda' => [
-        'titulo' => 'Así amanece mi WhatsApp',
+        'titulo' => 'Así llegan los pedidos a mi WhatsApp',
         'texto' => 'Tiendas, emprendedores, artistas y creadores de contenido necesitan crecer en redes **todos los días**. Esa demanda ya existe. La pregunta es quién la atiende.',
         'capturas' => 'mensajes',
     ],

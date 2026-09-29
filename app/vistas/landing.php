@@ -51,7 +51,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
         </div>
 
         <div class="hero__visual">
-            <div class="telefono">
+            <div class="telefono<?= $capturas['demanda'] ? ' telefono--captura' : '' ?>">
                 <?php if ($capturas['demanda']): ?>
                     <img src="<?= e($capturas['demanda'][0]['src']) ?>" width="<?= $capturas['demanda'][0]['ancho'] ?>"
                          height="<?= $capturas['demanda'][0]['alto'] ?>" alt="Mensajes de clientes en WhatsApp" fetchpriority="high">
@@ -79,7 +79,10 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
                 <h2><?= formato($l['demanda']['titulo']) ?></h2>
                 <p><?= formato($l['demanda']['texto']) ?></p>
             </div>
-            <?= $galeria($capturas['demanda'], 'Mensajes de clientes pidiendo servicios', 'Aquí van tus capturas de mensajes: súbelas como mensajes-1.jpg, mensajes-2.jpg…') ?>
+            <?php $masMensajes = array_slice($capturas['demanda'], 1); // la primera ya se ve en el celular de la portada ?>
+            <?php if ($masMensajes || !$capturas['demanda']): ?>
+                <?= $galeria($masMensajes, 'Mensajes de clientes pidiendo servicios', 'Aquí van tus capturas de mensajes: súbelas como mensajes-1.jpg, mensajes-2.jpg…') ?>
+            <?php endif; ?>
         </div>
     </section>
 

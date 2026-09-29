@@ -310,6 +310,19 @@ strong {
     object-position: top;
 }
 
+/* Con una captura real, el marco toma las proporciones de la captura (no se recorta nada)
+   y deja arriba una franja negra, como la barra de estado, para que la muesca no tape la primera fila */
+.telefono.telefono--captura {
+    aspect-ratio: auto;
+    padding-top: 34px;
+    background: #000;
+}
+
+.telefono--captura img {
+    display: block;
+    height: auto;
+}
+
 .chat {
     display: flex;
     flex-direction: column;

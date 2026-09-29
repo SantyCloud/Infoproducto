@@ -69,6 +69,31 @@ prueba('la landing muestra todas las secciones, el precio tachado y botones a /w
     afirmar(!str_contains($html, 'fbevents.js'), 'Sin META_PIXEL_ID no se carga el Pixel.');
 });
 
+prueba('la primera captura de mensajes va en el celular de la portada y no se repite en la galería', function () {
+    $captura = fn (string $nombre): array => [
+        'nombre' => $nombre, 'ancho' => 590, 'alto' => 1080,
+        'src' => "/assets/img/capturas/$nombre-720.webp", 'src_chico' => "/assets/img/capturas/$nombre-480.webp",
+        'srcset' => "/assets/img/capturas/$nombre-480.webp 480w, /assets/img/capturas/$nombre-720.webp 720w",
+    ];
+    $datos = datos_landing(contenido('negocio'), contenido('landing'));
+
+    $datos['capturas']['demanda'] = [$captura('mensajes-1')];
+    $html = vista('landing', $datos, 'layout_landing');
+    afirmar_igual(1, substr_count($html, 'mensajes-1-'), 'Con una sola captura, solo aparece en el celular.');
+    afirmar_contiene('telefono--captura', $html, 'El marco toma las proporciones de la captura.');
+
+    $datos['capturas']['demanda'] = [$captura('mensajes-1'), $captura('mensajes-2')];
+    $html = vista('landing', $datos, 'layout_landing');
+    afirmar_igual(1, substr_count($html, 'mensajes-1-'), 'La primera no se repite en la galería.');
+    afirmar_contiene('mensajes-2-480', $html, 'Las demás van en la galería.');
+
+    $datos['capturas']['demanda'] = [];
+    $datos['mostrar_huecos'] = true;
+    $html = vista('landing', $datos, 'layout_landing');
+    afirmar_contiene('Ejemplo ilustrativo', $html, 'Sin capturas, el celular dibujado lo aclara.');
+    afirmar_contiene('class="hueco"', $html, 'Y en local se ve dónde van las capturas.');
+});
+
 prueba('la landing guarda de qué anuncio viene la visita (UTM, fbclid y visitante)', function () {
     $respuesta = con_cookies_de_visita(html(''), ['utm_source' => 'facebook', 'utm_campaign' => 'lanzamiento', 'fbclid' => 'IwAR123'], [], 'https://sitio.com/?utm_source=facebook');
     $cookies = array_column($respuesta['cookies'], 1, 0);
