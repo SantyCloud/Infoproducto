@@ -24,7 +24,7 @@ return [
 
     // Franja amarilla de arriba (solo se muestra mientras la promo esté vigente)
     'promo' => [
-        'barra' => '🔥 {promo_nombre}: **{precio}** (antes {precio_normal})',
+        'barra' => '🔥 **{precio}** (antes {precio_normal})',
         'despues' => 'Después vuelve a {precio_normal}.',
         // Etiqueta amarilla junto al precio. {ahorro} = cuánto ahorra ($5) · {descuento} = porcentaje (33%).
         // Ejemplos: 'Ahorra {ahorro}' · '−{descuento}' · 'Ahorra {ahorro} ({descuento})'
@@ -32,13 +32,15 @@ return [
     ],
 
     'hero' => [
-        'etiqueta' => 'Negocio digital desde tu celular',
-        'titulo' => 'Crea tu propio **negocio de servicios para redes sociales** desde tu celular',
-        'subtitulo' => 'El método exacto que uso para vender servicios SMM (seguidores, likes y vistas): dónde conseguirlos barato, cuánto cobrar y cómo conseguir clientes.',
+        // Lo de arriba (título, precio, botón y lo que recibe) debe verse SIN BAJAR en el celular:
+        // mantén estos textos cortos. La etiqueta sobre el título está vacía para ganar espacio.
+        'etiqueta' => '',
+        'titulo' => 'Crea tu **negocio de servicios para redes** desde tu celular',
+        'subtitulo' => 'El método exacto que uso para vender seguidores, likes y vistas.',
         'boton' => 'Quiero el método por {precio}',
-        'nota_boton' => 'Pago único · Te atiendo personalmente por WhatsApp',
-        // Lo que recibe, en corto (el detalle va más abajo, en "Todo lo que recibes")
-        'ventajas' => ['El método completo', 'Acceso a la web', 'Curso: cómo usar el sistema', 'Curso: cómo crear anuncios'],
+        'nota_boton' => 'Pago único · Te atiendo por WhatsApp',
+        // Lo que recibe, en corto y en dos columnas (el detalle va más abajo, en "Todo lo que recibes")
+        'ventajas' => ['Método completo', 'Acceso a la web', 'Curso del sistema', 'Curso de anuncios'],
         // Texto bajo la captura del celular (cuando ya subiste capturas "mensajes-…")
         'pie_captura' => 'Así me llegan los pedidos por WhatsApp',
         // Mensajes del celular dibujado (se usan mientras no subas capturas "mensajes-…")

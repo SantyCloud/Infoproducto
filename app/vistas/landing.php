@@ -32,7 +32,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
 <header class="hero">
     <div class="contenedor hero__rejilla">
         <div class="hero__texto">
-            <p class="etiqueta"><?= formato($l['hero']['etiqueta']) ?></p>
+            <?php if (!empty($l['hero']['etiqueta'])): ?><p class="etiqueta"><?= formato($l['hero']['etiqueta']) ?></p><?php endif; ?>
             <h1><?= formato($l['hero']['titulo']) ?></h1>
             <p class="hero__sub"><?= formato($l['hero']['subtitulo']) ?></p>
 

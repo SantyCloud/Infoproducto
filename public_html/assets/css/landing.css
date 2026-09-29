@@ -59,7 +59,7 @@ h3 {
 }
 
 h1 {
-    font-size: clamp(1.9rem, 7.2vw, 3.4rem);
+    font-size: clamp(1.65rem, 7.2vw, 3.4rem);
     font-weight: 800;
 }
 
@@ -104,11 +104,11 @@ strong {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 2px 12px;
-    padding: 8px 14px;
+    gap: 2px 10px;
+    padding: 6px 12px;
     background: var(--amarillo);
     color: #211a00;
-    font-size: 0.86rem;
+    font-size: 0.8rem;
     line-height: 1.35;
     font-weight: 650;
     text-align: center;
@@ -126,7 +126,7 @@ strong {
 .hero {
     position: relative;
     overflow: hidden;
-    padding: 28px 0 56px;
+    padding: 20px 0 48px;
     background:
         radial-gradient(900px 480px at 85% -10%, rgba(124, 92, 255, 0.38), transparent 60%),
         radial-gradient(700px 420px at -15% 105%, rgba(37, 211, 102, 0.16), transparent 60%),
@@ -161,6 +161,7 @@ strong {
 
 .hero__sub {
     max-width: 36em;
+    margin: 0;
     color: var(--claro-2);
     font-size: 1rem;
 }
@@ -170,7 +171,7 @@ strong {
     flex-wrap: wrap;
     align-items: center;
     gap: 10px 14px;
-    margin: 18px 0 16px;
+    margin: 14px 0 12px;
 }
 
 .precio-antes {
@@ -213,7 +214,7 @@ strong {
     gap: 10px;
     width: 100%;
     min-height: 58px;
-    padding: 14px 24px;
+    padding: 14px 18px;
     border-radius: 14px;
     background: var(--wa);
     color: var(--wa-tinta);
@@ -253,21 +254,22 @@ strong {
 }
 
 .nota-boton {
-    margin: 10px 0 0;
+    margin: 8px 0 0;
     color: var(--claro-2);
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     text-align: center;
 }
 
+/* Lo que recibe, en dos columnas: cabe en la primera pantalla del celular */
 .ventajas {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
     justify-content: center;
-    gap: 8px 18px;
-    margin: 16px 0 0;
+    gap: 6px 16px;
+    margin: 12px 0 0;
     padding: 0;
     list-style: none;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
 }
 
 .ventajas li {
