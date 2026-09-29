@@ -1,5 +1,5 @@
 -- 005 · Pagos por activar. Cuando registras un pago sin el email del cliente, el panel te da un enlace de
--- activación (tudominio.com/activar/K7Q2-M8XP) para enviárselo por WhatsApp. Al abrirlo, el cliente escribe
+-- activación (tudominio.com/activar/K7Q2M-8XPRT) para enviárselo por WhatsApp. Al abrirlo, el cliente escribe
 -- su nombre y su email: en ese momento se crean el comprador, la venta y su acceso.
 
 CREATE TABLE activaciones (

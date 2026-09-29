@@ -1,7 +1,7 @@
 <?php
 /**
  * Enlace de activación listo para enviárselo al cliente por WhatsApp (o copiarlo).
- * @var string $codigo      K7Q2M8XP
+ * @var string $codigo      K7Q2M8XPRT
  * @var array  $activacion
  */
 $mensaje = mensaje_activacion($codigo);

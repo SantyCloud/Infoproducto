@@ -95,7 +95,8 @@ function venta_por_clave(?string $clave): ?array
 
 /**
  * Registra la venta (datos ya validados) y devuelve:
- * ['repetida' => bool, 'venta', 'comprador', 'enlace' (null si repetida), 'email' => resultado|null, 'meta' => bool|null]
+ * ['repetida' => bool, 'venta', 'comprador', 'enlace' (null si repetida), 'email' => resultado|null, 'meta' => bool|null],
+ * o ['error' => mensaje] si otro formulario ya registró un pago de ese clic (dos pestañas a la vez).
  */
 function venta_registrar(array $datos): array
 {
@@ -104,10 +105,13 @@ function venta_registrar(array $datos): array
         return venta_ya_registrada($repetida);
     }
     try {
-        $resultado = db_transaccion(fn (): array => venta_crear(
-            comprador_guardar($datos['nombre'], $datos['email'], $datos['whatsapp'] ?: null),
-            $datos
-        ));
+        $resultado = db_transaccion(function () use ($datos): array {
+            // El clic se vuelve a revisar dentro de la transacción (dos formularios del mismo clic a la vez)
+            if ($datos['lead'] !== null && ($ocupado = lead_ya_pagado($datos['lead'], $datos['clave_formulario'])) !== null) {
+                return ['error' => $ocupado];
+            }
+            return venta_crear(comprador_con_sesiones_cerradas_si_existia($datos['nombre'], $datos['email'], $datos['whatsapp'] ?: null), $datos);
+        });
     } catch (PDOException $error) {
         // Dos envíos simultáneos del mismo formulario: el segundo choca con la restricción UNIQUE
         $repetida = venta_por_clave($datos['clave_formulario']);
@@ -115,6 +119,10 @@ function venta_registrar(array $datos): array
             return venta_ya_registrada($repetida);
         }
         throw $error;
+    }
+
+    if (isset($resultado['error'])) {
+        return $resultado;
     }
 
     // Llamadas externas, fuera de la transacción
@@ -152,6 +160,21 @@ function venta_crear(array $comprador, array $datos): array
     ];
 }
 
+/**
+ * Guarda el comprador y, si su cuenta ya existía, cierra sus sesiones abiertas: si alguien la ocupó antes
+ * escribiendo un email ajeno al activar, no se queda dentro cuando su verdadero dueño compra.
+ * El dueño del email vuelve a entrar con el enlace que le llega a su correo.
+ */
+function comprador_con_sesiones_cerradas_si_existia(string $nombre, string $email, ?string $whatsapp, ?string $notas = null): array
+{
+    $existia = comprador_por_email($email) !== null;
+    $comprador = comprador_guardar($nombre, $email, $whatsapp, $notas);
+    if ($existia) {
+        comprador_cerrar_sesiones((int) $comprador['id']);
+    }
+    return $comprador;
+}
+
 function venta_ya_registrada(array $venta): array
 {
     return [
@@ -168,7 +191,7 @@ function venta_ya_registrada(array $venta): array
 function acceso_manual(string $nombre, string $email, ?string $whatsapp, ?string $notas, bool $enviarEmail): array
 {
     $resultado = db_transaccion(function () use ($nombre, $email, $whatsapp, $notas): array {
-        $comprador = comprador_guardar($nombre, $email, $whatsapp, $notas);
+        $comprador = comprador_con_sesiones_cerradas_si_existia($nombre, $email, $whatsapp, $notas);
         acceso_otorgar((int) $comprador['id'], null);
         return ['comprador' => $comprador, 'enlace' => enlace_acceso_crear((int) $comprador['id'])];
     });

@@ -30,14 +30,14 @@ function cookies_de(array $respuesta): array
     return array_column($respuesta['cookies'] ?? [], 0);
 }
 
-prueba('el código tiene 8 caracteres sin letras confusas y se acepta con o sin guion, en minúsculas', function () {
+prueba('el código tiene 10 caracteres sin letras confusas y se acepta con o sin guion, en minúsculas', function () {
     bd_de_prueba();
-    afirmar((bool) preg_match('/^[' . ALFABETO_CODIGOS . ']{8}$/', codigo_activacion_libre()));
-    afirmar_igual('K7Q2-M8XP', formatear_codigo_activacion('K7Q2M8XP'));
-    foreach (['K7Q2-M8XP', 'k7q2 m8xp', ' k7q2m8xp '] as $escrito) {
-        afirmar_igual('K7Q2M8XP', normalizar_codigo_activacion($escrito), "«{$escrito}»");
+    afirmar((bool) preg_match('/^[' . ALFABETO_CODIGOS . ']{10}$/', codigo_activacion_libre()));
+    afirmar_igual('K7Q2M-8XPRT', formatear_codigo_activacion('K7Q2M8XPRT'));
+    foreach (['K7Q2M-8XPRT', 'k7q2m 8xprt', ' k7q2m8xprt '] as $escrito) {
+        afirmar_igual('K7Q2M8XPRT', normalizar_codigo_activacion($escrito), "«{$escrito}»");
     }
-    foreach (['K7Q2-M8X', 'K7Q2-M8XPP', 'K7Q2-M8X0', 'K7Q2-M8XI', '', null, ['K7Q2M8XP']] as $malo) {
+    foreach (['K7Q2M-8XPR', 'K7Q2M-8XPRTT', 'K7Q2M-8XPR0', 'K7Q2M-8XPRI', '', null, ['K7Q2M8XPRT']] as $malo) {
         afirmar_igual(null, normalizar_codigo_activacion($malo), var_export($malo, true));
     }
 });
@@ -148,7 +148,7 @@ prueba('sin enlace, en /activar se escribe el código; si está mal, se puede co
     simular_peticion();
     afirmar_contiene('name="codigo" type="text"', miembro_activar_formulario()['cuerpo']);
 
-    post_legitimo(['codigo' => 'ZZZZ-ZZZZ', 'nombre' => 'Ana', 'email' => 'ana@correo.com']);
+    post_legitimo(['codigo' => 'ZZZZZ-ZZZZZ', 'nombre' => 'Ana', 'email' => 'ana@correo.com']);
     $malo = miembro_activar();
     afirmar_igual(422, $malo['estado']);
     afirmar_contiene('Ese código no sirve', $malo['cuerpo']);
@@ -173,27 +173,33 @@ prueba('si el email ya es de un comprador, no se abre su cuenta: la compra se le
     afirmar_igual(2, (int) db_valor("SELECT COUNT(*) FROM emails WHERE tipo = 'acceso' AND destinatario = 'maria@correo.com'"), 'El enlace para entrar le llega a su correo.');
 });
 
-prueba('probar códigos al azar tiene límite: por IP y entre todos', function () {
+prueba('probar códigos al azar tiene límite por IP, y los errores de otros no frenan a quien trae su código', function () {
     bd_de_prueba();
     $codigo = formatear_codigo_activacion(pago_por_activar()['codigo']);
     $ip = ['REMOTE_ADDR' => '10.9.9.9'];
     for ($i = 0; $i < 10; $i++) {
         simular_peticion([], [], $ip);
-        afirmar_igual(404, miembro_activar_formulario('ZZZZ-ZZZZ')['estado']);
+        afirmar_igual(404, miembro_activar_formulario('ZZZZZ-ZZZZZ')['estado']);
     }
     simular_peticion([], [], $ip);
     afirmar_igual(429, miembro_activar_formulario($codigo)['estado'], 'Pasado el límite, ni un código bueno responde desde esa IP.');
     simular_peticion(['codigo' => $codigo, 'nombre' => 'Ana', 'email' => 'ana@correo.com', '_csrf' => 't'], ['csrf' => 't'], $ip);
     afirmar_igual(429, miembro_activar()['estado']);
-    simular_peticion([], [], ['REMOTE_ADDR' => '10.9.9.10']);
-    afirmar_igual(200, miembro_activar_formulario($codigo)['estado'], 'Desde otra IP, sí.');
 
-    for ($i = 0; $i < 100; $i++) {
-        miembro_activar_contar_fallo();
+    // Alguien se equivoca a propósito desde muchas redes, cada una sin pasar su límite: no hay tope entre
+    // todos que pueda agotar, así que no deja a los compradores sin activar
+    for ($red = 1; $red <= 12; $red++) {
+        for ($i = 0; $i < 10; $i++) {
+            simular_peticion([], [], ['REMOTE_ADDR' => "10.8.$red.1"]);
+            afirmar_igual(404, miembro_activar_formulario('ZZZZZ-ZZZZZ')['estado']);
+        }
     }
-    simular_peticion([], [], ['REMOTE_ADDR' => '10.9.9.11']);
-    afirmar_igual(429, miembro_activar_formulario($codigo)['estado'], 'Con 100 códigos equivocados en una hora se frena para todos.');
-    afirmar_igual(0, (int) db_valor('SELECT COUNT(*) FROM ventas'));
+    $cliente = ['REMOTE_ADDR' => '10.9.9.10'];
+    simular_peticion([], [], $cliente);
+    afirmar_igual(200, miembro_activar_formulario($codigo)['estado'], 'Desde otra IP, el código bueno sirve.');
+    simular_peticion(['codigo' => $codigo, 'nombre' => 'Ana', 'email' => 'ana@correo.com', '_csrf' => 't'], ['csrf' => 't'], $cliente);
+    afirmar_igual(302, miembro_activar()['estado']);
+    afirmar_igual(1, (int) db_valor('SELECT COUNT(*) FROM ventas'));
 });
 
 prueba('un enlace nuevo anula el anterior; los vencidos y los pagos anulados no sirven', function () {
@@ -203,6 +209,8 @@ prueba('un enlace nuevo anula el anterior; los vencidos y los pagos anulados no 
     $nuevo = activacion_nuevo_codigo($id);
     afirmar_igual(null, activacion_vigente($pago['codigo']), 'El código anterior deja de servir.');
     afirmar(activacion_vigente($nuevo['codigo']) !== null);
+    afirmar_igual(null, activacion_nuevo_codigo($id, version_enlace_activacion($pago['activacion'])), 'Con la versión de un enlace que ya cambió, no se crea otro.');
+    afirmar(activacion_vigente($nuevo['codigo']) !== null, 'Y el último sigue sirviendo.');
 
     db_ejecutar('UPDATE activaciones SET expira_en = ?', [gmdate('Y-m-d H:i:s', time() - 1)]);
     afirmar_igual(null, activacion_canjear($nuevo['codigo'], 'Ana', 'ana@correo.com'), 'Un código vencido no sirve.');
@@ -228,7 +236,7 @@ prueba('en el panel el pago cuenta desde que lo registras, y el clic queda "por 
     ], sesion_admin());
     $resultado = admin_venta_registrar();
     afirmar_igual(200, $resultado['estado']);
-    afirmar((bool) preg_match('#http://localhost/activar/[A-Z0-9]{4}-[A-Z0-9]{4}#', $resultado['cuerpo']), 'Muestra el enlace de activación.');
+    afirmar((bool) preg_match('#http://localhost/activar/[A-Z0-9]{5}-[A-Z0-9]{5}#', $resultado['cuerpo']), 'Muestra el enlace de activación.');
     afirmar_contiene('href="https://wa.me/593991112233?text=', $resultado['cuerpo'], 'Con su WhatsApp, el botón abre su chat.');
     afirmar_igual(0, (int) db_valor('SELECT COUNT(*) FROM ventas'));
 
@@ -238,6 +246,8 @@ prueba('en el panel el pago cuenta desde que lo registras, y el clic queda "por 
     afirmar_contiene('Pagó · por activar', $inicio);
     afirmar_contiene('<span class="metrica__valor">$10</span>', $inicio, 'Ya cuenta en los ingresos.');
     afirmar_contiene('<span class="metrica__valor">100%</span>', $inicio, 'Y en el cierre.');
+    $version = version_enlace_activacion((array) db_fila('SELECT * FROM activaciones'));
+    afirmar_contiene('name="version" value="' . $version . '"', $inicio, 'El botón "Enlace nuevo" lleva la versión del enlace actual.');
 
     [, $errores] = venta_validar(['codigo' => $lead['codigo'], 'nombre' => 'X', 'email' => 'x@x.com', 'monto' => '10', 'clave_formulario' => token_aleatorio()]);
     afirmar_contiene('falta activar', $errores['codigo'] ?? '', 'El mismo clic no se puede vender dos veces.');
@@ -266,10 +276,25 @@ prueba('el panel crea un enlace nuevo o anula el pago, solo con sesión y formul
     simular_peticion(['_csrf' => 'x'], sesion_admin() + ['csrf' => 'y']);
     afirmar_igual(403, admin_activacion_anular($id)['estado']);
 
-    post_legitimo([], sesion_admin());
+    $boton = ['version' => version_enlace_activacion($pago['activacion'])]; // lo que envía el botón "Enlace nuevo"
+    post_legitimo($boton, sesion_admin());
     $nuevo = admin_activacion_enlace($id);
     afirmar_contiene('Enlace nuevo para el pago', $nuevo['cuerpo']);
     afirmar_igual(null, activacion_vigente($pago['codigo']), 'El enlace anterior deja de servir.');
+    preg_match('#/activar/([A-Z0-9]{5}-[A-Z0-9]{5})#', $nuevo['cuerpo'], $enviado);
+    $enviado = (string) normalizar_codigo_activacion($enviado[1] ?? '');
+    afirmar(activacion_vigente($enviado) !== null, 'Muestra el enlace nuevo.');
+
+    // Vuelve de WhatsApp y el navegador reenvía el formulario (recargar, volver atrás): no se crea otro enlace
+    post_legitimo($boton, sesion_admin());
+    $recargado = admin_activacion_enlace($id);
+    afirmar_contiene('Ya se había creado un enlace nuevo', $recargado['cuerpo']);
+    afirmar(activacion_vigente($enviado) !== null, 'El enlace que ya le enviaste sigue sirviendo.');
+    $actual = version_enlace_activacion((array) activacion_por_id((int) $id));
+    afirmar_contiene('name="version" value="' . $actual . '"', $recargado['cuerpo'], 'Si no lo copiaste, desde ahí puedes crear otro.');
+    post_legitimo([], sesion_admin());
+    admin_activacion_enlace($id);
+    afirmar(activacion_vigente($enviado) !== null, 'Sin versión tampoco se cambia.');
 
     post_legitimo([], sesion_admin());
     afirmar_contiene('anulado', admin_activacion_anular($id)['cuerpo']);
@@ -298,4 +323,47 @@ prueba('al activar, la venta va a Meta con los datos del clic, su moneda y el em
         afirmar_igual(hash('sha256', 'ana@correo.com'), $evento['user_data']['em']);
         afirmar_igual((int) $lead['id'], (int) $resultado['venta']['lead_id']);
     });
+});
+
+prueba('dos formularios del mismo clic enviados a la vez: el segundo no registra nada y lo avisa', function () {
+    bd_de_prueba();
+    $lead = lead_registrar(visita_de_prueba());
+    // Las tres pestañas pasaron la validación antes de que la primera se guardara
+    $pestana = fn (array $datos): array => venta_validar($datos + ['codigo' => $lead['codigo'], 'monto' => '10', 'clave_formulario' => token_aleatorio()])[0];
+    $enlace = $pestana(['entrega' => 'activacion']);
+    $otroEnlace = $pestana(['entrega' => 'activacion']);
+    $conEmail = $pestana(['entrega' => 'email', 'nombre' => 'Ana', 'email' => 'ana@correo.com']);
+
+    afirmar(!isset(activacion_crear($enlace)['error']));
+    afirmar_contiene('falta activar', activacion_crear($otroEnlace)['error'] ?? '', 'Sin error 500: lo avisa.');
+    afirmar_contiene('falta activar', venta_registrar($conEmail)['error'] ?? '');
+    afirmar_igual([1, 0, 0], [
+        (int) db_valor('SELECT COUNT(*) FROM activaciones'),
+        (int) db_valor('SELECT COUNT(*) FROM ventas'),
+        (int) db_valor('SELECT COUNT(*) FROM compradores'),
+    ], 'El clic queda con un solo pago.');
+});
+
+prueba('quien ocupó el email de otra persona al activar sale de esa cuenta cuando su dueño compra', function () {
+    $sesionesDe = fn (string $email): int => (int) db_valor(
+        "SELECT COUNT(*) FROM sesiones s JOIN compradores c ON c.id = s.comprador_id WHERE s.tipo = 'miembro' AND c.email = ?",
+        [$email]
+    );
+    $compras = [
+        'con su email en el panel' => fn () => venta_registrar(datos_venta(['email' => 'victima@correo.com'])),
+        'con su enlace de activación' => fn () => activacion_canjear(pago_por_activar()['codigo'], 'Víctima', 'victima@correo.com'),
+        'con acceso manual' => fn () => acceso_manual('Víctima', 'victima@correo.com', null, null, false),
+    ];
+    foreach ($compras as $como => $comprar) {
+        bd_de_prueba();
+        // Alguien paga y activa su código con un email que no es suyo: queda con sesión en esa cuenta
+        post_legitimo(['codigo' => pago_por_activar()['codigo'], 'nombre' => 'Intruso', 'email' => 'victima@correo.com']);
+        afirmar_igual([302, 1], [miembro_activar()['estado'], $sesionesDe('victima@correo.com')]);
+        $otro = venta_registrar(datos_venta(['email' => 'otro@correo.com']));
+        sesion_crear('miembro', (int) $otro['comprador']['id']);
+
+        $comprar();
+        afirmar_igual(0, $sesionesDe('victima@correo.com'), "Su sesión se cierra ($como).");
+        afirmar_igual(1, $sesionesDe('otro@correo.com'), "Las sesiones de los demás no se tocan ($como).");
+    }
 });

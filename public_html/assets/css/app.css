@@ -34,7 +34,7 @@
 :root {
     --tinta: #3f122b;
     --tinta-2: #754259;
-    --tinta-3: #9a5775;
+    --tinta-3: #8f5070; /* texto suave: 4,8:1 o más sobre todos los fondos claros */
     --fondo: #fff7f9;
     --fondo-2: #fdeef3;
     --blanco: #ffffff;

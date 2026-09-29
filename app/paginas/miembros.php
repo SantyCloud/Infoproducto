@@ -103,7 +103,7 @@ function miembro_acceso_usar(string $token): array
 /* ---------- Activar (pago confirmado por WhatsApp) ---------- */
 
 /**
- * Página del enlace de activación (/activar/K7Q2-M8XP): si el código sirve, pide nombre y email.
+ * Página del enlace de activación (/activar/K7Q2M-8XPRT): si el código sirve, pide nombre y email.
  * Sin código (/activar), el formulario incluye el campo para escribirlo.
  */
 function miembro_activar_formulario(string $codigo = ''): array
@@ -116,7 +116,6 @@ function miembro_activar_formulario(string $codigo = ''): array
     }
     $normalizado = normalizar_codigo_activacion($codigo);
     if ($normalizado === null || activacion_vigente($normalizado) === null) {
-        miembro_activar_contar_fallo();
         // Quien ya activó y vuelve a tocar el enlace de WhatsApp para entrar, va directo al curso
         return miembro_actual() !== null ? redireccion('/miembros') : miembro_activar_vista(['pantalla' => 'no_sirve'], 404);
     }
@@ -137,7 +136,7 @@ function miembro_activar(): array
     $codigo = normalizar_codigo_activacion($datos['codigo']);
     $errores = [];
     if ($codigo === null) {
-        $errores['codigo'] = 'El código tiene 8 letras y números, por ejemplo K7Q2-M8XP.';
+        $errores['codigo'] = 'El código tiene 10 letras y números, por ejemplo K7Q2M-8XPRT.';
         $datos['con_enlace'] = false;
     }
     if ($datos['nombre'] === '') {
@@ -157,7 +156,6 @@ function miembro_activar(): array
         return miembro_activar_vista(['pantalla' => 'ya_activado', 'email' => $datos['email']]);
     }
     if ($resultado === null) {
-        miembro_activar_contar_fallo();
         $datos['con_enlace'] = false;
         return miembro_activar_vista($datos + ['errores' => [
             'codigo' => 'Ese código no sirve: revisa que esté bien escrito. Si ya lo usaste, entra con tu email en /entrar.',
@@ -175,22 +173,19 @@ function miembro_activar(): array
 }
 
 /**
- * Freno a quien pruebe códigos al azar: 10 intentos por IP cada 15 minutos y, entre todos,
- * 100 códigos equivocados por hora. Devuelve la página de "demasiados intentos" o null.
+ * Freno a quien pruebe códigos al azar: 10 intentos por IP cada 15 minutos (en IPv6, por red /64).
+ * Sin tope global a propósito: con él, cualquiera podría dejar sin activar a todos los compradores.
+ * Con 10 caracteres (31^10 códigos posibles), ni mil IP probando un año tienen una posibilidad real.
+ * Devuelve la página de "demasiados intentos" o null.
  */
 function miembro_activar_limitado(): ?array
 {
     $ip = ip_cliente();
-    if (limite_permitir('activar-ip:' . ip_para_limites($ip), 10, 900) && !limite_alcanzado('activar-fallos', 100, 3600)) {
+    if (limite_permitir('activar-ip:' . ip_para_limites($ip), 10, 900)) {
         return null;
     }
     registrar('seguridad', 'Demasiados intentos de activación', ['ip' => $ip]);
     return miembro_activar_vista(['pantalla' => 'limitado'], 429);
-}
-
-function miembro_activar_contar_fallo(): void
-{
-    limite_permitir('activar-fallos', 100, 3600);
 }
 
 function miembro_activar_vista(array $datos, int $estado = 200): array

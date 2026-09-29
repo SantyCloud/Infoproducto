@@ -13,3 +13,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Capturas o archivos sueltos en la raíz (pruebas locales): nunca van al repositorio
+/*.png
+/*.jpg

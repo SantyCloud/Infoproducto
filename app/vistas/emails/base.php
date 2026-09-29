@@ -34,7 +34,7 @@ $producto = contenido('negocio')['producto'];
         <a href="<?= e($url) ?>" style="display:inline-block;background:#e02768;color:#ffffff;font-size:17px;font-weight:bold;text-decoration:none;padding:15px 28px;border-radius:14px;"><?= e($boton) ?></a>
     </td></tr>
     <tr><td style="padding:6px 24px 20px;">
-        <p style="margin:0;font-size:13px;line-height:1.5;color:#9a5775;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="<?= e($url) ?>" style="color:#b71a51;word-break:break-all;"><?= e($url) ?></a></p>
+        <p style="margin:0;font-size:13px;line-height:1.5;color:#8f5070;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="<?= e($url) ?>" style="color:#b71a51;word-break:break-all;"><?= e($url) ?></a></p>
     </td></tr>
     <?php if ($caja): ?>
     <tr><td style="padding:0 24px 22px;">
@@ -53,7 +53,7 @@ $producto = contenido('negocio')['producto'];
         <p style="margin:0;font-size:15px;line-height:1.55;color:#754259;"><?= formato($despedida) ?></p>
     </td></tr>
 </table>
-<p style="margin:16px 0 0;font-size:12px;color:#9a5775;"><?= e($producto) ?> · <?= e(config('app.url')) ?></p>
+<p style="margin:16px 0 0;font-size:12px;color:#8f5070;"><?= e($producto) ?> · <?= e(config('app.url')) ?></p>
 </td></tr>
 </table>
 </body>

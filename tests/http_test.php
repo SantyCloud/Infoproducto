@@ -269,7 +269,7 @@ prueba('recorrido con enlace de activación: panel → pago → el cliente activ
             'entrega' => 'activacion', 'monto' => '10', 'moneda' => 'AUTO', 'metodo_pago' => 'Transferencia bancaria',
         ]);
         afirmar_igual(200, $estado);
-        preg_match('#' . preg_quote($url, '#') . '/activar/[A-Z0-9]{4}-[A-Z0-9]{4}#', $html, $m);
+        preg_match('#' . preg_quote($url, '#') . '/activar/[A-Z0-9]{5}-[A-Z0-9]{5}#', $html, $m);
         $enlace = $m[0] ?? '';
         afirmar($enlace !== '', 'El resultado muestra el enlace de activación.');
         afirmar_contiene('https://wa.me/?text=', $html, 'Sin su número, WhatsApp deja elegir el chat.');

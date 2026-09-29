@@ -65,12 +65,18 @@ function acceso_vigente(int $compradorId): bool
     );
 }
 
+/** Cierra las sesiones del comprador en todos sus dispositivos. Devuelve cuántas cerró. */
+function comprador_cerrar_sesiones(int $compradorId): int
+{
+    return db_ejecutar("DELETE FROM sesiones WHERE tipo = 'miembro' AND comprador_id = ?", [$compradorId]);
+}
+
 /** Quita el acceso y cierra todas sus sesiones al instante. */
 function acceso_revocar(int $compradorId): void
 {
     db_transaccion(function () use ($compradorId): void {
         db_ejecutar('UPDATE accesos SET revocado_en = ? WHERE comprador_id = ? AND revocado_en IS NULL', [ahora_bd(), $compradorId]);
-        db_ejecutar("DELETE FROM sesiones WHERE tipo = 'miembro' AND comprador_id = ?", [$compradorId]);
+        comprador_cerrar_sesiones($compradorId);
         db_ejecutar('UPDATE tokens_login SET usado_en = ? WHERE comprador_id = ? AND usado_en IS NULL', [ahora_bd(), $compradorId]);
     });
 }

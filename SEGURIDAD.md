@@ -4,7 +4,7 @@ Revisión previa a producción de las cuatro áreas pedidas: **peticiones falsif
 fuga de contenido y datos expuestos**. Cada punto indica cómo está protegido y qué prueba automática lo
 demuestra (`php tests/run.php`; también se ejecutan en GitHub en cada cambio).
 
-Fecha: 28-09-2026.
+Fecha: 28-09-2026 (actualizada el 29-09-2026 con los enlaces de activación).
 
 ---
 
@@ -29,9 +29,11 @@ se registran desde el panel, con sesión de administrador.
 |---|---|---|
 | Crear un acceso sin ser el dueño | Solo `/admin` (con sesión) crea accesos; todas sus páginas redirigen al login sin sesión | `ventas`: "el panel exige iniciar sesión en todas sus páginas" |
 | Adivinar un enlace mágico | 256 bits aleatorios; en la base solo se guarda su hash (HMAC con `CLAVE_APP`) | `miembros`: "se guarda el hash del enlace, nunca el enlace" |
-| Adivinar un código de activación (`/activar`) | 8 caracteres sin letras confusas (unos 40 bits); en la base solo su hash; 10 intentos cada 15 minutos por IP (en IPv6, por red /64) y, entre todos, 100 códigos equivocados por hora; vence a los 30 días. Con esos límites, probar al azar tardaría miles de años | `activaciones`: "probar códigos al azar tiene límite…", "solo se guarda el hash del código" |
+| Adivinar un código de activación (`/activar`) | 10 caracteres sin letras confusas (31^10, unos 50 bits); en la base solo su hash; 10 intentos cada 15 minutos por IP (en IPv6, por red /64); vence a los 30 días. Aun con 65.000 redes IPv6 (las que da gratis un túnel IPv6) probando sin parar, harían falta unos 7 años para tener un 1 % de probabilidad de acertar alguno de 50 pagos pendientes. **Sin tope global** a propósito: con él, cualquiera podría frenar la activación de todos los compradores equivocándose desde varias IP | `activaciones`: "probar códigos al azar tiene límite por IP, y los errores de otros no frenan…", "solo se guarda el hash del código" |
 | Usar dos veces el mismo código | Se marca como usado en la misma transacción que crea la venta: solo una petición puede hacerlo. Un enlace nuevo anula el anterior; un pago anulado ya no se activa | `activaciones`: "sirve una sola vez", "un enlace nuevo anula el anterior…" |
 | Entrar a una cuenta ajena escribiendo su email al activar | Si el email ya es de un comprador, no se abre sesión ni se cambia su nombre: la compra se le suma y el enlace para entrar llega a **ese** correo | `activaciones`: "si el email ya es de un comprador…" |
+| Ocupar de antemano el email de otra persona (activar tu pago con su email) y seguir dentro cuando ella compre | Toda compra con un email que ya existía (panel, enlace de activación o acceso manual) cierra las sesiones abiertas de esa cuenta; su dueño entra con el enlace que le llega a su correo | `activaciones`: "quien ocupó el email de otra persona…" |
+| Registrar dos pagos del mismo clic (dos pestañas del panel a la vez) | El clic se vuelve a revisar dentro de la transacción que guarda el pago; la otra pestaña muestra el aviso | `activaciones`: "dos formularios del mismo clic enviados a la vez…" |
 | Reutilizar o compartir el enlace | Un solo uso (consumo atómico en la base, ni con dos clics simultáneos), vence (7 días / 30 minutos) y el nuevo anula los anteriores | `miembros`: "sirve una sola vez", "vence…"; `http`: el enlace usado da 410 |
 | Antivirus del correo que "gastan" el enlace | Abrir el enlace solo muestra un botón; se consume al pulsarlo (POST) | `http`: abrirlo dos veces no lo gasta |
 | Compartir la cuenta | Máximo 3 dispositivos; el cuarto cierra la sesión más antigua | `miembros`: "como máximo 3 dispositivos" |
@@ -96,12 +98,26 @@ El revisor también confirmó que funcionan bien: enlaces y sesiones (256 bits, 
 admin, CSRF en las 12 rutas POST, sin redirecciones abiertas, sin salir de carpetas, `.env`/`.git`/`storage`
 inaccesibles, errores genéricos en producción, sin XSS, cookies y cabeceras, y SQL con parámetros.
 
-## Enlaces de activación (29-09-2026)
+## Segunda revisión independiente (29-09-2026)
 
 Desde esta fecha el acceso se entrega normalmente con un **enlace de activación** que el dueño envía por
-WhatsApp (sección 2). Riesgo aceptado: quien envíe más de 100 códigos equivocados en una hora frena la
-activación de **todos** hasta que pase esa hora (es el precio de que nadie pueda probar códigos desde muchas
-IP). No da acceso a nada; si pasara, registra la venta con el email del cliente ("Ya tengo su email").
+WhatsApp (sección 2). Otro revisor atacó esa parte y el estilo nuevo con un servidor de prueba y Chromium.
+**Conclusión: nadie consigue acceso sin haber pagado** (sin XSS, SQL con parámetros, CSRF en las rutas nuevas;
+6 activaciones simultáneas del mismo código crearon siempre 1 sola venta). Encontró 6 problemas, ninguno
+grave, y reprodujo los 6. Todos están corregidos, cada uno con una prueba automática, y sus propios scripts
+de ataque se volvieron a ejecutar contra el código corregido.
+
+| # | Hallazgo | Gravedad | Estado |
+|---|---|---|---|
+| 1 | Cualquiera podía frenar `/activar` para todos: 100 códigos equivocados desde 10 IP agotaban el tope global de la hora, y los compradores con su código bueno veían "Demasiados intentos" | Media | Corregido: código de 10 caracteres y sin tope global; queda el límite por IP |
+| 2 | "Enlace nuevo" no aguantaba un reenvío: si el navegador recargaba la página, se creaba otro enlace y dejaba de servir el que el dueño ya había enviado | Media-baja | Corregido: el botón lleva la versión del enlace que se veía; si ya cambió, no se crea otro y el panel lo avisa |
+| 3 | Algunos textos chicos de la landing (entre ellos el aviso "no representan ingresos típicos ni garantizados") no llegaban al contraste mínimo de 4,5:1 | Baja | Corregido: texto suave más oscuro (`#8f5070`: 4,8:1 o más sobre todos los fondos claros) |
+| 4 | Alguien podía activar su pago con el email de otra persona y seguir dentro de esa cuenta después de que su verdadero dueño comprara | Baja | Corregido: la compra cierra las sesiones abiertas de esa cuenta (sección 2) |
+| 5 | Una negrita (`**…**`) en el chip del precio, un botón o el pie habría quedado ilegible (color oscuro sobre fondo oscuro o rosa) | Baja (hoy no pasaba) | Corregido: ahí la negrita toma el color de su texto |
+| 6 | Dos pestañas del panel con el mismo clic enviadas a la vez podían registrar dos pagos de ese clic (o dar un error 500) | Muy baja | Corregido: el clic se revisa dentro de la transacción. Con un servidor real, 24 rondas de envíos simultáneos (el choque ocurrió en 7): siempre un solo pago por clic y ningún error |
+
+Además se había subido por error una captura de prueba (`angosto-mx.png`, la landing en un celular angosto,
+sin datos privados): se borró y `.gitignore` impide subir imágenes sueltas en la raíz.
 
 ## Recomendaciones para el dueño
 

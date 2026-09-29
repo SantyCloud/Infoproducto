@@ -2,7 +2,7 @@
 /**
  * Activar el acceso con el código que el dueño envía por WhatsApp después del pago.
  * @var string $pantalla    formulario | ya_activado | revisa_tu_correo | no_sirve | limitado
- * @var string $codigo      K7Q2-M8XP
+ * @var string $codigo      K7Q2M-8XPRT
  * @var bool   $con_enlace  el código vino en el enlace: no hace falta escribirlo
  * @var string $nombre
  * @var string $email
@@ -28,7 +28,7 @@ $iconos = ['formulario' => 'regalo', 'ya_activado' => 'check', 'revisa_tu_correo
                 <?php else: ?>
                     <div class="campo">
                         <label for="codigo">Código de activación</label>
-                        <input id="codigo" name="codigo" type="text" value="<?= e($codigo) ?>" placeholder="Ej. K7Q2-M8XP" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
+                        <input id="codigo" name="codigo" type="text" value="<?= e($codigo) ?>" placeholder="Ej. K7Q2M-8XPRT" autocomplete="off" autocapitalize="characters" spellcheck="false" required>
                         <small>Te lo envié por WhatsApp junto con el enlace.</small>
                         <?= $error('codigo') ?>
                     </div>

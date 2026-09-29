@@ -29,6 +29,7 @@ $ahora = ahora_bd();
                 <div class="acciones">
                     <form method="post" action="/admin/activaciones/<?= $id ?>/enlace">
                         <?= csrf_campo() ?>
+                        <input type="hidden" name="version" value="<?= e(version_enlace_activacion($activacion)) ?>">
                         <button class="boton boton--chico" type="submit"><?= icono('enlace') ?> Enlace nuevo</button>
                     </form>
                     <form method="post" action="/admin/activaciones/<?= $id ?>/anular">

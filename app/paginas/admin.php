@@ -333,6 +333,9 @@ function admin_venta_registrar(): array
     $activacion = activacion_por_clave($datos['clave_formulario']);
     if ($activacion === null && $datos['entrega'] === 'activacion' && venta_por_clave($datos['clave_formulario']) === null) {
         $resultado = activacion_crear($datos);
+        if (isset($resultado['error'])) {
+            return admin_vista_formulario_venta($datos, ['codigo' => $resultado['error']]);
+        }
         registrar('ventas', $resultado['repetida'] ? 'Pago repetido (no se duplicó)' : 'Pago registrado: falta que el cliente lo active', [
             'activacion' => $resultado['activacion']['id'],
         ]);
@@ -342,6 +345,9 @@ function admin_venta_registrar(): array
         return admin_vista_activacion(activacion_ya_creada($activacion));
     }
     $resultado = venta_registrar($datos);
+    if (isset($resultado['error'])) {
+        return admin_vista_formulario_venta($datos, ['codigo' => $resultado['error']]);
+    }
     registrar('ventas', $resultado['repetida'] ? 'Venta repetida (no se duplicó)' : 'Venta registrada', [
         'venta' => $resultado['venta']['id'],
         'email' => $resultado['comprador']['email'],
@@ -349,7 +355,7 @@ function admin_venta_registrar(): array
     return admin_vista('venta_resultado', ['titulo' => 'Venta registrada', 'resultado' => $resultado], 'ventas');
 }
 
-function admin_vista_activacion(array $resultado, bool $enlaceNuevo = false): array
+function admin_vista_activacion(array $resultado, bool $enlaceNuevo = false, string $aviso = ''): array
 {
     $activacion = $resultado['activacion'];
     $venta = $activacion['venta_id'] !== null ? db_fila('SELECT * FROM ventas WHERE id = ?', [$activacion['venta_id']]) : null;
@@ -357,6 +363,7 @@ function admin_vista_activacion(array $resultado, bool $enlaceNuevo = false): ar
         'titulo' => $enlaceNuevo ? 'Enlace nuevo' : 'Pago registrado',
         'resultado' => $resultado,
         'enlace_nuevo' => $enlaceNuevo,
+        'aviso' => $aviso,
         'comprador' => $venta !== null ? comprador_por_id((int) $venta['comprador_id']) : null,
         'clic' => $activacion['lead_id'] !== null ? db_fila('SELECT * FROM leads WHERE id = ?', [$activacion['lead_id']]) : null,
     ], 'ventas');
@@ -379,8 +386,14 @@ function admin_activacion_accion(string $id, string $accion): array
     }
     $aid = (int) $activacion['id'];
     if ($accion === 'enlace') {
-        $resultado = activacion_nuevo_codigo($aid);
+        // Solo si el enlace sigue siendo el que se veía al tocar el botón: recargar la página no anula el que ya enviaste
+        $resultado = activacion_nuevo_codigo($aid, texto_de($_POST['version'] ?? null));
         if ($resultado === null) {
+            $actual = activacion_por_id($aid);
+            if ($actual !== null && $actual['usado_en'] === null && $actual['anulado_en'] === null) {
+                return admin_vista_activacion(activacion_ya_creada($actual), false, 'Ya se había creado un enlace nuevo para este pago'
+                    . ' (quizá recargaste la página): el último que enviaste sigue sirviendo. Si no lo copiaste, crea otro.');
+            }
             return admin_ventas("El pago #$aid ya se activó o se anuló: no se le puede crear otro enlace.");
         }
         registrar('ventas', 'Nuevo enlace de activación', ['activacion' => $aid]);

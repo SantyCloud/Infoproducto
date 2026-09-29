@@ -3,6 +3,7 @@
  * Resultado de registrar un pago por activar, o de crearle un enlace nuevo.
  * @var array      $resultado     ver activacion_crear()
  * @var bool       $enlace_nuevo  se creó otro enlace para un pago ya registrado
+ * @var string     $aviso         en vez de "ya estaba registrado" (ej. se recargó la página del enlace nuevo)
  * @var array|null $comprador     quien lo activó (si ya lo activó)
  * @var array|null $clic          el clic a WhatsApp del pago, si tiene
  */
@@ -19,7 +20,9 @@ $monto = formatear_centavos($activacion['monto_centavos'], $activacion['moneda']
     </div>
     <?= plantilla('parciales/enlace_activacion', ['codigo' => $resultado['codigo'], 'activacion' => $activacion]) ?>
 <?php else: ?>
-    <div class="aviso aviso--alerta">Este pago ya estaba registrado (#<?= $id ?>, <?= e($monto) ?>): no se duplicó nada.</div>
+    <div class="aviso aviso--alerta">
+        <?= $aviso !== '' ? e($aviso) : 'Este pago ya estaba registrado (#' . $id . ', ' . e($monto) . '): no se duplicó nada.' ?>
+    </div>
     <div class="tarjeta">
         <?php if ($comprador !== null): ?>
             <p>Ya lo activó <a href="/admin/compradores/<?= (int) $comprador['id'] ?>"><?= e($comprador['nombre']) ?></a>
@@ -30,6 +33,7 @@ $monto = formatear_centavos($activacion['monto_centavos'], $activacion['moneda']
             <p>Todavía no lo activa. El enlace solo se muestra al crearlo: si no lo copiaste, crea uno nuevo (el anterior deja de servir).</p>
             <form method="post" action="/admin/activaciones/<?= $id ?>/enlace">
                 <?= csrf_campo() ?>
+                <input type="hidden" name="version" value="<?= e(version_enlace_activacion($activacion)) ?>">
                 <button class="boton" type="submit"><?= icono('enlace') ?> Crear un enlace nuevo</button>
             </form>
         <?php endif; ?>

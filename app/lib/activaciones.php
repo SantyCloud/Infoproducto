@@ -4,21 +4,23 @@ declare(strict_types=1);
 /*
  * Pagos por activar (enlaces de activación).
  *
- * Cobras por WhatsApp, registras el pago en el panel y te da un enlace (tudominio.com/activar/K7Q2-M8XP)
+ * Cobras por WhatsApp, registras el pago en el panel y te da un enlace (tudominio.com/activar/K7Q2M-8XPRT)
  * para enviárselo al cliente. Él lo abre, escribe su nombre y su email y entra al curso: en ese momento
  * se crean el comprador, la venta y su acceso, se avisa a Meta (Purchase) y le llega el email de bienvenida.
  *
- * - El código tiene 8 caracteres (unos 40 bits) y solo se guarda su hash, como los demás tokens.
+ * - El código tiene 10 caracteres (unos 50 bits) y solo se guarda su hash, como los demás tokens.
  * - Sirve una sola vez: se marca como usado en la misma transacción que crea la venta. Vence a los 30 días.
- * - Probar códigos al azar está limitado por IP y en total (ver miembro_activar_limitado()).
- * - Si el email ya es de un comprador, NO se abre esa cuenta: la compra se le suma y el enlace para entrar
- *   le llega a su correo. Así nadie entra a una cuenta ajena escribiendo un email que no es suyo.
+ * - Probar códigos al azar está limitado por IP (ver miembro_activar_limitado()). No hay tope global: con él,
+ *   cualquiera podría dejar sin activar a todos los compradores equivocándose a propósito desde varias IP.
+ * - Si el email ya es de un comprador, NO se abre esa cuenta: la compra se le suma, se cierran sus sesiones
+ *   abiertas y el enlace para entrar le llega a su correo. Así nadie entra a una cuenta ajena escribiendo un
+ *   email que no es suyo, ni se queda en ella si la ocupó antes que su dueño.
  */
 
-const LARGO_CODIGO_ACTIVACION = 8;
+const LARGO_CODIGO_ACTIVACION = 10;
 const VALIDEZ_ACTIVACION = 30 * 86400;
 
-/** Lo que escribe el cliente ("k7q2 m8xp", "K7Q2-M8XP") → "K7Q2M8XP"; null si no puede ser un código. */
+/** Lo que escribe el cliente ("k7q2m 8xprt", "K7Q2M-8XPRT") → "K7Q2M8XPRT"; null si no puede ser un código. */
 function normalizar_codigo_activacion(mixed $texto): ?string
 {
     $codigo = strtoupper((string) preg_replace('/[\s-]/', '', limpiar($texto, 40)));
@@ -26,10 +28,20 @@ function normalizar_codigo_activacion(mixed $texto): ?string
     return $valido ? $codigo : null;
 }
 
-/** "K7Q2M8XP" → "K7Q2-M8XP", más fácil de leer y de dictar. */
+/** "K7Q2M8XPRT" → "K7Q2M-8XPRT", más fácil de leer y de dictar. */
 function formatear_codigo_activacion(string $codigo): string
 {
-    return substr($codigo, 0, 4) . '-' . substr($codigo, 4);
+    return substr($codigo, 0, 5) . '-' . substr($codigo, 5);
+}
+
+/**
+ * Versión del enlace actual de un pago: va oculta en el botón "Enlace nuevo" del panel. Si el navegador
+ * reenvía ese formulario (recargar, volver atrás), la versión ya no coincide y no se crea otro enlace:
+ * el que ya enviaste al cliente sigue sirviendo.
+ */
+function version_enlace_activacion(array $activacion): string
+{
+    return substr((string) $activacion['codigo_hash'], 0, 16);
 }
 
 function hash_codigo_activacion(string $codigo): string
@@ -75,7 +87,8 @@ function activaciones_pendientes(): array
 
 /**
  * Registra un pago por activar (datos ya validados con venta_validar) y devuelve
- * ['repetida' => bool, 'activacion' => fila, 'codigo' => 'K7Q2M8XP' o null, 'enlace' => URL o null].
+ * ['repetida' => bool, 'activacion' => fila, 'codigo' => 'K7Q2M8XPRT' o null, 'enlace' => URL o null],
+ * o ['error' => mensaje] si otro formulario ya registró un pago de ese clic (dos pestañas a la vez).
  * El código solo se conoce ahora: si se pierde, se crea otro con activacion_nuevo_codigo().
  */
 function activacion_crear(array $datos): array
@@ -86,18 +99,25 @@ function activacion_crear(array $datos): array
     }
     $codigo = codigo_activacion_libre();
     try {
-        $id = db_insertar('activaciones', [
-            'codigo_hash' => hash_codigo_activacion($codigo),
-            'lead_id' => $datos['lead']['id'] ?? null,
-            'monto_centavos' => (int) round((float) $datos['monto'] * 100),
-            'moneda' => $datos['moneda'] ?? 'USD',
-            'metodo_pago' => $datos['metodo_pago'] ?: null,
-            'referencia_pago' => $datos['referencia_pago'] ?: null,
-            'whatsapp' => $datos['whatsapp'] ?: null,
-            'clave_formulario' => $datos['clave_formulario'],
-            'creado_en' => ahora_bd(),
-            'expira_en' => gmdate('Y-m-d H:i:s', time() + VALIDEZ_ACTIVACION),
-        ]);
+        $id = db_transaccion(function () use ($datos, $codigo): int|string {
+            // El clic se vuelve a revisar dentro de la transacción: dos formularios del mismo clic enviados
+            // a la vez no pueden registrar dos pagos
+            if ($datos['lead'] !== null && ($ocupado = lead_ya_pagado($datos['lead'], $datos['clave_formulario'])) !== null) {
+                return $ocupado;
+            }
+            return db_insertar('activaciones', [
+                'codigo_hash' => hash_codigo_activacion($codigo),
+                'lead_id' => $datos['lead']['id'] ?? null,
+                'monto_centavos' => (int) round((float) $datos['monto'] * 100),
+                'moneda' => $datos['moneda'] ?? 'USD',
+                'metodo_pago' => $datos['metodo_pago'] ?: null,
+                'referencia_pago' => $datos['referencia_pago'] ?: null,
+                'whatsapp' => $datos['whatsapp'] ?: null,
+                'clave_formulario' => $datos['clave_formulario'],
+                'creado_en' => ahora_bd(),
+                'expira_en' => gmdate('Y-m-d H:i:s', time() + VALIDEZ_ACTIVACION),
+            ]);
+        });
     } catch (PDOException $error) {
         // Dos envíos simultáneos del mismo formulario: el segundo choca con la restricción UNIQUE
         $repetida = activacion_por_clave($datos['clave_formulario']);
@@ -105,6 +125,9 @@ function activacion_crear(array $datos): array
             return activacion_ya_creada($repetida);
         }
         throw $error;
+    }
+    if (is_string($id)) {
+        return ['error' => $id];
     }
     return ['repetida' => false, 'activacion' => activacion_por_id($id), 'codigo' => $codigo, 'enlace' => enlace_activacion($codigo)];
 }
@@ -144,6 +167,11 @@ function activacion_canjear(string $codigo, string $nombre, string $email): ?arr
         }
         $existente = comprador_por_email($email);
         $comprador = $existente ?? comprador_guardar($nombre, $email, $activacion['whatsapp']);
+        if ($existente !== null) {
+            // Quien tenga una sesión abierta en esa cuenta (por ejemplo, alguien que la ocupó con un email
+            // ajeno) sale: el dueño del email entra con el enlace que le llega a su correo
+            comprador_cerrar_sesiones((int) $existente['id']);
+        }
         $lead = $activacion['lead_id'] === null ? null : db_fila('SELECT * FROM leads WHERE id = ?', [$activacion['lead_id']]);
         if ($lead !== null && db_valor('SELECT 1 FROM ventas WHERE lead_id = ?', [$lead['id']])) {
             $lead = null; // ese clic ya tiene otra venta (el panel no lo permite, pero por si acaso)
@@ -192,14 +220,17 @@ function activacion_recien_usada(string $codigo, string $email): bool
 
 /**
  * Código nuevo para un pago que aún no se activa (el cliente perdió el enlace o se venció):
- * el anterior deja de servir y el plazo vuelve a empezar. Null si ya se activó o se anuló.
+ * el anterior deja de servir y el plazo vuelve a empezar. Con $version (la del enlace que se veía al tocar
+ * el botón), solo si el enlace sigue siendo ese: así recargar la página no anula el que ya enviaste.
+ * Null si no se cambió (ya se activó, se anuló o ya tenía otro enlace nuevo).
  */
-function activacion_nuevo_codigo(int $id): ?array
+function activacion_nuevo_codigo(int $id, ?string $version = null): ?array
 {
     $codigo = codigo_activacion_libre();
     $cambiada = db_ejecutar(
-        'UPDATE activaciones SET codigo_hash = ?, expira_en = ? WHERE id = ? AND usado_en IS NULL AND anulado_en IS NULL',
-        [hash_codigo_activacion($codigo), gmdate('Y-m-d H:i:s', time() + VALIDEZ_ACTIVACION), $id]
+        'UPDATE activaciones SET codigo_hash = ?, expira_en = ? WHERE id = ? AND usado_en IS NULL AND anulado_en IS NULL'
+            . ($version !== null ? ' AND substr(codigo_hash, 1, 16) = ?' : ''),
+        [hash_codigo_activacion($codigo), gmdate('Y-m-d H:i:s', time() + VALIDEZ_ACTIVACION), $id, ...($version !== null ? [$version] : [])]
     );
     if ($cambiada !== 1) {
         return null;

@@ -39,14 +39,13 @@
     --crema: #fff7f9;
     --lavado: #fdeef3;
     --lavado-2: #fbe3ea;
-    --rosa: #f7cfda;
     --rubor: #f2b8c9;
     --linea: #f1d6df;
     --blanco: #ffffff;
     /* Tinta (ciruela) */
     --tinta: #3f122b;
     --tinta-2: #754259;
-    --tinta-3: #9a5775;
+    --tinta-3: #8f5070; /* texto suave: 4,8:1 o más sobre todos los fondos claros */
     /* Marca */
     --accion: #e02768;
     --accion-2: #d0205f;
@@ -131,6 +130,14 @@ a {
 strong {
     color: var(--tinta);
     font-weight: 700;
+}
+
+/* Sobre fondos oscuros o de color, las negritas toman el color de su texto (si no, no se leerían) */
+.chip-promo strong,
+.etiqueta strong,
+.boton-wa strong,
+.pie strong {
+    color: inherit;
 }
 
 /* Palabras destacadas de los títulos: en rosa, con degradado donde el navegador lo permite */
@@ -332,7 +339,7 @@ h2 strong {
 
 .nota-boton {
     margin: 8px 0 0;
-    color: var(--tinta-3);
+    color: var(--tinta-2); /* más oscura: la parte de arriba cae sobre la sombra del botón */
     font-size: 0.86rem;
     text-align: center;
 }
@@ -492,8 +499,8 @@ h2 strong {
 }
 
 .ilustrativo {
-    margin: 14px 0 0;
-    color: var(--tinta-3);
+    margin: 22px 0 0; /* debajo de la sombra del celular: así se lee (4,6:1 o más) */
+    color: var(--tinta-2);
     font-size: 0.75rem;
     text-align: center;
 }
