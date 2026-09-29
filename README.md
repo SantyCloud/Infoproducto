@@ -1,4 +1,4 @@
-# Web de venta — Sistema de Reventa SMM
+# Web de venta — Método Revendedor SMM
 
 Landing de venta con cierre por WhatsApp, panel de administración y área de miembros.
 PHP + SQLite, sin librerías externas, pensada para Hostinger.

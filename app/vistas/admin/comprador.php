@@ -44,7 +44,15 @@ $estadoEmail = ['enviado' => 'ok', 'simulado' => 'alerta', 'error' => 'error'];
                 <button class="boton" type="submit"><?= icono('check') ?> Restaurar acceso</button></form>
         <?php endif; ?>
     </div>
-    <p class="suave chico separado">Progreso en el curso: <?= $vistas ?> de <?= $total_lecciones ?> lecciones vistas.</p>
+    <p class="suave chico separado">
+        <?php if (!empty($comprador['primer_ingreso_en'])): ?>
+            Entró al curso por primera vez el <?= e(fecha_local($comprador['primer_ingreso_en'])) ?>.
+            Progreso: <?= $vistas ?> de <?= $total_lecciones ?> lecciones vistas.
+        <?php else: ?>
+            Todavía no ha entrado al curso. Si pide la devolución dentro de los 15 días desde la compra, corresponde hacerla
+            (ver la política de reembolsos).
+        <?php endif; ?>
+    </p>
 </div>
 
 <div class="tarjeta">

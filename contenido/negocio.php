@@ -11,7 +11,7 @@
 
 return [
     // Nombre del producto (títulos, botones, emails)
-    'producto' => 'Sistema de Reventa SMM',
+    'producto' => 'Método Revendedor SMM',
 
     // Precio normal, en dólares
     'precio_normal' => 15,
@@ -25,12 +25,13 @@ return [
         'termina' => '2026-10-31 23:59', // hora de Ecuador. Pon null si la promo no tiene fecha de fin
     ],
 
-    // Días de garantía de devolución. Pon 0 si no ofreces garantía (se ocultan las menciones).
-    'garantia_dias' => 7,
+    // Días de garantía de devolución. Pon 0 si no ofreces garantía: se ocultan las menciones en la landing y
+    // la página de reembolsos muestra solo lo que exige la ley (contenido/legal/reembolsos-sin-garantia.md).
+    'garantia_dias' => 0,
 
     // WhatsApp donde cierras las ventas: código de país + número, sin "+" ni espacios (Ecuador: 593…)
     'whatsapp' => [
-        'numero' => '593900000000',
+        'numero' => '593968473532',
         // Mensaje que aparece ya escrito al abrir WhatsApp
         'mensaje' => 'Hola 👋 Quiero el {producto} a {precio}.',
         // Se añade al final del mensaje. {codigo} es lo que te dice qué anuncio trajo la venta.
@@ -57,6 +58,6 @@ return [
         'identificacion' => '[Tu RUC o cédula]',
         'ciudad' => '[Tu ciudad]',
         'pais' => 'Ecuador',
-        'fecha_actualizacion' => '28 de septiembre de 2026',
+        'fecha_actualizacion' => '29 de septiembre de 2026',
     ],
 ];

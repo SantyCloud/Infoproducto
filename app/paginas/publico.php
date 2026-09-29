@@ -80,7 +80,13 @@ function pagina_privacidad(): array
 
 function pagina_reembolsos(): array
 {
-    return pagina_legal('reembolsos');
+    return pagina_legal(documento_reembolsos(contenido('negocio')));
+}
+
+/** Sin garantía (garantia_dias = 0), la política cubre solo las devoluciones que exige la ley. */
+function documento_reembolsos(array $negocio): string
+{
+    return (int) ($negocio['garantia_dias'] ?? 0) > 0 ? 'reembolsos' : 'reembolsos-sin-garantia';
 }
 
 /** Muestra un documento de contenido/legal/ (Markdown con variables). */

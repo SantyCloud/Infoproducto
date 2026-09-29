@@ -103,9 +103,9 @@ Para comprar, pagar, ver el curso y aplicar lo que enseña se usan plataformas e
 - Los resultados dependen de cada persona: de su esfuerzo, su mercado, sus clientes, el tiempo que dedique y otros factores.
 - Las capturas y resultados que se muestran en el sitio son resultados propios de {titular}. No son resultados típicos ni garantizados, y no significan que vayas a obtener lo mismo.
 
-## Garantía y reembolsos
+## Reembolsos
 
-{producto} tiene una garantía de {garantia_dias} días desde la fecha de compra. Las condiciones y el procedimiento están en nuestra **Política de reembolsos**, publicada en {sitio}. Después de un reembolso, cancelamos el acceso al curso.
+Cuándo puedes pedir la devolución de tu dinero y cómo hacerlo está en nuestra **Política de reembolsos**, publicada en {sitio}. Después de un reembolso, cancelamos el acceso al curso.
 
 ## Limitación de responsabilidad
 

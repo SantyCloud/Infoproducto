@@ -134,3 +134,9 @@ function enlace_acceso_usar(mixed $token): ?int
     $compradorId = (int) db_valor('SELECT comprador_id FROM tokens_login WHERE token_hash = ?', [hash_token($token)]);
     return acceso_vigente($compradorId) ? $compradorId : null;
 }
+
+/** Guarda la primera vez que el comprador entra al curso (la política de reembolsos depende de eso). */
+function comprador_marcar_ingreso(int $compradorId): void
+{
+    db_ejecutar('UPDATE compradores SET primer_ingreso_en = COALESCE(primer_ingreso_en, ?) WHERE id = ?', [ahora_bd(), $compradorId]);
+}

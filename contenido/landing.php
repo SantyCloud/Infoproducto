@@ -17,7 +17,7 @@ return [
     // Título y descripción que ven Google y WhatsApp al compartir el enlace
     'seo' => [
         'titulo' => '{producto}: tu negocio de servicios para redes sociales',
-        'descripcion' => 'El sistema paso a paso para revender servicios SMM desde tu celular, sin inventario. {promo_nombre}: {precio}.',
+        'descripcion' => 'El método paso a paso para revender servicios SMM desde tu celular, sin inventario. {promo_nombre}: {precio}.',
     ],
 
     // Franja amarilla de arriba (solo se muestra mientras la promo esté vigente)
@@ -29,8 +29,8 @@ return [
     'hero' => [
         'etiqueta' => 'Negocio digital desde tu celular',
         'titulo' => 'Crea tu propio **negocio de servicios para redes sociales** desde tu celular',
-        'subtitulo' => 'El sistema exacto que uso para vender servicios SMM (seguidores, likes y vistas): dónde conseguirlos a precio de mayorista, cuánto cobrar y cómo encontrar tus primeros clientes.',
-        'boton' => 'Quiero el sistema por {precio}',
+        'subtitulo' => 'El método exacto que uso para vender servicios SMM (seguidores, likes y vistas): dónde conseguirlos a precio de mayorista, cuánto cobrar y cómo encontrar tus primeros clientes.',
+        'boton' => 'Quiero el método por {precio}',
         'nota_boton' => 'Te atiendo personalmente por WhatsApp',
         'ventajas' => ['Pago único', 'Sin mensualidades', 'Garantía de {garantia_dias} días'],
         // Mensajes del celular dibujado (se usan mientras no subas capturas "mensajes-…")
@@ -56,16 +56,15 @@ return [
             'Pasas horas en redes sociales y no te dejan ni un dólar.',
             'Todos los "negocios digitales" que ves piden cursos caros o saber programar.',
         ],
-        'cierre' => 'Con este sistema no necesitas inventario, local ni conocimientos técnicos: **solo tu celular y ganas de atender clientes.**',
+        'cierre' => 'Con este método no necesitas inventario, local ni conocimientos técnicos: **solo tu celular y ganas de atender clientes.**',
     ],
 
     'historia' => [
         'titulo' => 'Cómo empecé',
         'parrafos' => [
-            'Hace [X años] yo [cuenta tu situación de entonces: trabajo, estudios, qué buscabas]. Empecé a revender servicios para redes sociales desde mi celular, con muy poco dinero y un par de clientes conocidos.',
-            '[Cuenta cómo te fue al principio: tus primeras ventas, los errores que cometiste, lo que aprendiste.]',
-            'Con el tiempo armé un sistema: dónde comprar, cuánto cobrar y qué responder a cada cliente. Hubo épocas en las que **me despertaba con miles de mensajes** de personas pidiendo servicios.',
-            'Hoy tengo mi propio panel, smmclixy.com, y en este curso te enseño paso a paso el mismo sistema que uso yo.',
+            'Empecé hace 3 años. Un amigo de Argentina me mostró este modelo de negocio: revender servicios para redes sociales comprándolos a precio de proveedor. Desde entonces trabajo desde mi celular.',
+            'Con el tiempo armé un método: dónde comprar, cuánto cobrar y qué responder a cada cliente. Hubo épocas en las que **me despertaba con miles de mensajes** de personas pidiendo servicios.',
+            'Hoy disfruto de mi **libertad y mi comodidad**. Tengo mi propio panel, smmclixy.com, y en este curso te enseño paso a paso el mismo método que uso yo.',
         ],
         'firma' => '[Tu nombre]',
     ],
@@ -81,7 +80,7 @@ return [
     ],
 
     'modulos' => [
-        'titulo' => 'Qué incluye el sistema',
+        'titulo' => 'Qué incluye el método',
         'texto' => 'Videos cortos y al grano, pensados para verlos desde el celular.',
         'lista' => [
             ['titulo' => 'El negocio SMM por dentro', 'texto' => 'Qué son los servicios SMM, quién los compra y por qué es un mercado que no para de crecer.'],
@@ -104,7 +103,7 @@ return [
 
     'resultados' => [
         'titulo' => 'Resultados de mi negocio',
-        'texto' => 'Capturas reales de mi propio negocio. No te prometo lo mismo: depende de tu constancia, tus clientes y el tiempo que le dediques. Lo que sí te doy es el sistema exacto que uso.',
+        'texto' => 'Capturas reales de mi propio negocio. No te prometo lo mismo: depende de tu constancia, tus clientes y el tiempo que le dediques. Lo que sí te doy es el método exacto que uso.',
         'capturas' => 'ingresos',
         'aviso' => 'Resultados personales del autor. No representan ingresos típicos ni garantizados.',
     ],
@@ -159,7 +158,7 @@ return [
             ['pregunta' => '¿Cuánto dinero necesito para empezar?', 'respuesta' => 'Además del curso, solo el saldo para tus primeros pedidos. Puedes empezar con pocos dólares y recargar a medida que vendes.'],
             ['pregunta' => '¿Cómo pago?', 'respuesta' => 'Por WhatsApp: te paso los datos para pagar con {metodos_pago}. Cuando confirmo tu pago, te llega el acceso.'],
             ['pregunta' => '¿Cuándo recibo el acceso?', 'respuesta' => 'Apenas confirmo tu pago te llega un email con tu enlace de acceso, y también te lo envío por WhatsApp.'],
-            ['pregunta' => '¿Cuánto voy a ganar?', 'respuesta' => 'Depende de ti: de cuántos clientes consigas y del margen que pongas. No hay ingresos garantizados. Te enseño el sistema; el trabajo lo pones tú.'],
+            ['pregunta' => '¿Cuánto voy a ganar?', 'respuesta' => 'Depende de ti: de cuántos clientes consigas y del margen que pongas. No hay ingresos garantizados. Te enseño el método; el trabajo lo pones tú.'],
             ['pregunta' => '¿Sirve si no vivo en Ecuador?', 'respuesta' => 'Sí. El negocio funciona en cualquier país y los pagos se manejan en dólares.'],
             ['pregunta' => '¿Tengo que pagar el panel smmclixy?', 'respuesta' => 'Registrarte es gratis. Solo recargas saldo cuando tienes pedidos de tus clientes.'],
             ['pregunta' => '¿Y si no me gusta?', 'respuesta' => 'Tienes {garantia_dias} días de garantía: si no es para ti, te devuelvo tu dinero.'],
@@ -168,13 +167,13 @@ return [
 
     'cierre' => [
         'titulo' => 'Tu negocio puede empezar hoy',
-        'texto' => 'Por {precio} tienes el sistema completo, las plantillas y mi ayuda por WhatsApp. Escríbeme y empezamos.',
+        'texto' => 'Por {precio} tienes el método completo, las plantillas y mi ayuda por WhatsApp. Escríbeme y empezamos.',
         'boton' => 'Escribirme por WhatsApp',
     ],
 
     // Barra fija de abajo que aparece al bajar por la página
     'barra_fija' => [
-        'boton' => 'Quiero el sistema',
+        'boton' => 'Quiero el método',
     ],
 
     'pie' => [

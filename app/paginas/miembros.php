@@ -95,6 +95,7 @@ function miembro_acceso_usar(string $token): array
     if ($compradorId === null) {
         return miembro_acceso_confirmar($token); // muestra "este enlace ya no sirve"
     }
+    comprador_marcar_ingreso($compradorId);
     $sesion = sesion_crear('miembro', $compradorId);
     return con_cookie(redireccion('/miembros'), COOKIE_MIEMBRO, $sesion, DURACION_SESION_MIEMBRO);
 }

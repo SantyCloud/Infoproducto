@@ -4,7 +4,7 @@ Guía del proyecto para retomarlo en futuras sesiones. Todo en **español**: có
 
 ## Qué es
 
-Web de venta y entrega de un infoproducto: un **sistema/curso de reventa SMM** que enseña a montar un negocio revendiendo servicios SMM (seguidores, likes, vistas…) con **smmclixy.com** (el panel del dueño) como proveedor.
+Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso que enseña a montar un negocio revendiendo servicios SMM (seguidores, likes, vistas…) con **smmclixy.com** (el panel del dueño) como proveedor.
 
 - Doble objetivo: vender el curso y que cada comprador se registre en smmclixy.com.
 - Tráfico: anuncios de Meta (Instagram/Facebook), casi todo desde el celular, en Latinoamérica.
@@ -29,6 +29,7 @@ Web de venta y entrega de un infoproducto: un **sistema/curso de reventa SMM** q
 | Emails | **Resend** (API HTTP con curl) | Llega mejor que el SMTP compartido. Gratis: 100/día y 3.000/mes. |
 | Videos | **YouTube (oculto) o Google Drive** | El dueño quiere que sus usuarios de smmclixy también los vean, así que los videos NO son exclusivos. La protección se centra en el área de miembros y los descargables. Preferir YouTube: Drive corta la reproducción de los archivos muy vistos. |
 | Acceso de miembros | Enlace mágico por email, de un solo uso y confirmado con un botón (POST); sesión de 90 días; máximo 3 dispositivos | Sin contraseñas que olvidar. El botón evita que los antivirus del correo "gasten" el enlace al escanearlo. El admin puede copiar el enlace y mandarlo también por WhatsApp. |
+| Garantía | **Sin garantía de satisfacción** (`garantia_dias = 0`): la landing no la menciona y `/reembolsos` muestra `reembolsos-sin-garantia.md`, que cubre solo lo que exige la ley: devolución si pide dentro de 15 días y **no ha entrado** al curso (art. 45 de la Ley Orgánica de Defensa del Consumidor, reformado), problemas de acceso nuestros y cobros de más. `compradores.primer_ingreso_en` guarda cuándo entró por primera vez (se ve en su ficha del panel) | Decisión del dueño. Un "no hay devoluciones" absoluto no vale ante la ley (no se puede renunciar a los derechos del consumidor). **Pendiente de validar con un abogado.** Con `garantia_dias > 0` vuelve la política con garantía (`reembolsos.md`). |
 | Precio | $15 tachado → $10 con fecha de fin **real** (`contenido/negocio.php`) | Un precio anterior ficticio es publicidad engañosa (Ley Orgánica de Defensa del Consumidor, art. 7). Al vencer la fecha, la web muestra $15 sola. Nada de contadores falsos. |
 | Medición | Pixel (PageView, Contact) + API de Conversiones (Contact con el mismo `event_id`; Purchase al registrar la venta) | Meta aprende de las ventas reales, aunque se cierren por WhatsApp. |
 | Purchase | `action_source=website` si la venta trae código (con URL, IP, navegador y fbc/fbp del clic); `chat` si no | Meta solo acepta eventos web con datos del navegador; sin clic de origen, la venta fue por chat. Graph API `v25.0` (configurable con `META_GRAPH_VERSION`). |
@@ -50,13 +51,13 @@ app/                 código PHP (no accesible desde la web)
                      ventas, curso, mantenimiento (limpieza y respaldos)
   paginas/           publico.php (landing, /wa, legales), miembros.php, admin.php
   vistas/            layouts (landing, admin, miembros, general), admin/, miembros/, emails/, parciales/
-  migraciones/       001_inicial.sql, 002_progreso.sql…
+  migraciones/       001_inicial.sql, 002_progreso.sql, 003_primer_ingreso.sql…
 bin/                 instalar.php, crear-admin.php, desbloquear-panel.php, optimizar-capturas.php, tareas.php (cron)
 contenido/           lo que edita el dueño:
   negocio.php        nombre, precios, promo, garantía, WhatsApp, métodos de pago, smmclixy, datos legales
   landing.php        todos los textos de la landing
   emails.php         textos de los emails
-  legal/*.md         términos, privacidad, reembolsos (plantillas para revisar con abogado)
+  legal/*.md         términos, privacidad, reembolsos con y sin garantía (plantillas para revisar con abogado)
   capturas/          capturas originales (ya difuminadas) → se optimizan a public_html/assets/img/capturas/
   curso/             curso de EJEMPLO (el real va en storage/curso/, fuera de Git)
 public_html/         raíz web: index.php (único punto de entrada), .htaccess, robots.txt, favicon.svg, assets/
@@ -118,11 +119,14 @@ las tareas de fondo que dejó la prueba anterior. Si cambias la estructura de un
 
 ## Pendiente del dueño
 
-- Nombre definitivo del producto, dominio y número de WhatsApp.
+Ya dio (29-09-2026): nombre **Método Revendedor SMM**, WhatsApp **+593 96 847 3532**, su historia (empezó hace 3 años,
+conoció el modelo por un amigo de Argentina, trabaja desde el celular) y **sin garantía**.
+
+- Su nombre para firmar la historia (`contenido/landing.php` → `historia.firma`).
 - Capturas (ingresos y "miles de mensajes") con los datos de los clientes difuminados, en `contenido/capturas/`.
-- Su historia (cómo empezó, qué logró) para la sección "Mi historia" de la landing.
-- Garantía (¿cuántos días de devolución?), módulos del curso y bonos.
-- Enlace de registro o de referido de smmclixy y código de bono (opcional).
+- Módulos del curso y bonos: está grabando los videos. La landing muestra módulos de EJEMPLO que deben coincidir con el curso real antes de publicar.
+- Dominio (aún no lo elige) y enlace de registro o de referido de smmclixy, más código de bono (opcional).
+- Datos legales en `contenido/negocio.php` (titular, RUC o cédula, ciudad) y email de soporte.
 - Cuentas: Resend (fase 5), Pixel + token de la API de Conversiones (fase 6), acceso SSH a Hostinger (fase 7).
 
 ## Repositorio público

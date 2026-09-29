@@ -121,7 +121,7 @@ El panel (`/admin`) muestra en **Pendientes** lo que todavía falta.
 
 ```ini
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
-EMAIL_REMITENTE="Sistema de Reventa SMM <acceso@tudominio.com>"
+EMAIL_REMITENTE="Método Revendedor SMM <acceso@tudominio.com>"
 EMAIL_RESPONDER_A=tu-correo@gmail.com
 ```
 

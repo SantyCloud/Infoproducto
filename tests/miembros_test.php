@@ -22,6 +22,28 @@ prueba('el enlace mágico sirve una sola vez', function () {
     afirmar_igual(null, enlace_acceso_usar($token), 'La segunda vez ya no sirve.');
 });
 
+prueba('al entrar por primera vez se guarda la fecha (se ve en el panel) y no cambia en los ingresos siguientes', function () {
+    bd_de_prueba();
+    $id = (int) comprador_con_acceso()['id'];
+    $primerIngreso = fn () => db_valor('SELECT primer_ingreso_en FROM compradores WHERE id = ?', [$id]);
+    $ficha = function () use ($id): string {
+        simular_peticion([], [COOKIE_ADMIN => sesion_crear('admin', null)]);
+        return admin_comprador((string) $id)['cuerpo'];
+    };
+    afirmar_igual(null, $primerIngreso(), 'Antes de entrar no hay fecha.');
+    afirmar_contiene('Todavía no ha entrado al curso', $ficha());
+
+    post_legitimo([]);
+    afirmar_igual(302, miembro_acceso_usar(basename(enlace_acceso_crear($id)))['estado']);
+    afirmar($primerIngreso() !== null, 'Al entrar se guarda la fecha.');
+    afirmar_contiene('Entró al curso por primera vez', $ficha());
+
+    db_ejecutar('UPDATE compradores SET primer_ingreso_en = ? WHERE id = ?', ['2026-01-01 10:00:00', $id]);
+    post_legitimo([]);
+    afirmar_igual(302, miembro_acceso_usar(basename(enlace_acceso_crear($id, 'login')))['estado']);
+    afirmar_igual('2026-01-01 10:00:00', $primerIngreso(), 'Los ingresos siguientes no la cambian.');
+});
+
 prueba('el enlace vence, y al crear uno nuevo el anterior deja de servir', function () {
     bd_de_prueba();
     $comprador = comprador_con_acceso();

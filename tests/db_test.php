@@ -35,6 +35,33 @@ prueba('las migraciones crean todas las tablas y no se aplican dos veces', funct
     }
 });
 
+prueba('la migración 003 recupera cuándo entraron por primera vez los compradores anteriores', function () {
+    $carpeta = sys_get_temp_dir() . '/migraciones-' . getmypid();
+    if (!is_dir($carpeta)) {
+        mkdir($carpeta);
+    }
+    foreach (['001_inicial.sql', '002_progreso.sql'] as $archivo) {
+        copy(RAIZ . "/app/migraciones/$archivo", "$carpeta/$archivo");
+    }
+    $pdo = db_conectar(':memory:');
+    migrar($pdo, $carpeta);
+    array_map('unlink', glob("$carpeta/*.sql") ?: []);
+    rmdir($carpeta);
+    db($pdo);
+    $entro = (int) db_insertar('compradores', fila_comprador('entro@correo.com'));
+    $nunca = (int) db_insertar('compradores', fila_comprador('nunca@correo.com'));
+    db_ejecutar("INSERT INTO progreso (comprador_id, leccion, vista_en) VALUES (?, 'bienvenida', '2026-09-02 10:00:00')", [$entro]);
+    db_ejecutar(
+        "INSERT INTO tokens_login (comprador_id, token_hash, proposito, creado_en, expira_en, usado_en)
+         VALUES (?, 'hash', 'primer_acceso', '2026-09-01 09:00:00', '2026-09-08 09:00:00', '2026-09-01 09:30:00')",
+        [$entro]
+    );
+
+    afirmar_igual(['003_primer_ingreso.sql'], array_values(array_filter(migrar($pdo), fn ($m) => $m === '003_primer_ingreso.sql')));
+    afirmar_igual('2026-09-01 09:30:00', db_valor('SELECT primer_ingreso_en FROM compradores WHERE id = ?', [$entro]), 'Toma la fecha más antigua.');
+    afirmar_igual(null, db_valor('SELECT primer_ingreso_en FROM compradores WHERE id = ?', [$nunca]), 'Quien nunca entró queda sin fecha.');
+});
+
 prueba('el email del comprador es único aunque cambien mayúsculas', function () {
     bd_de_prueba();
     db_insertar('compradores', fila_comprador('ana@correo.com'));
