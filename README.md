@@ -3,9 +3,10 @@
 Landing de venta con cierre por WhatsApp, panel de administración y área de miembros.
 PHP + SQLite, sin librerías externas, pensada para Hostinger.
 
-- **Landing** (`/`): textos editables, precio con promoción real, capturas, botón de WhatsApp con código.
+- **Landing** (`/`, y una por país para los anuncios: `/ec`, `/mx`): textos editables, precio con promoción real, capturas, botón de WhatsApp con código.
 - **Botón de WhatsApp** (`/wa`): registra de qué anuncio viene cada persona y abre el chat con un código corto.
-- **Panel** (`/admin`): registras la venta con ese código → se crea el acceso, se envía el email y se avisa a Meta.
+- **Panel** (`/admin`): registras el pago con ese código → te da un enlace de activación y el mensaje listo para enviárselo por WhatsApp (si ya tienes su email, el acceso se crea al instante).
+- **Activación** (`/activar/…`): el cliente escribe su nombre y su email → se crean su acceso y su venta, le llega el email de bienvenida y se avisa a Meta.
 - **Área de miembros** (`/miembros`): se entra con un enlace mágico (sin contraseña); lecciones y descargables protegidos.
 
 ## Publicarla

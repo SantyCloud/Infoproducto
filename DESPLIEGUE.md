@@ -185,6 +185,7 @@ nano storage/curso/curso.php        # módulos, lecciones y enlaces de YouTube/D
 - [ ] `https://tudominio.com` carga con candado (https) y rápido en el celular.
 - [ ] `https://tudominio.com/.env` y `https://tudominio.com/storage/base.sqlite` **no** muestran nada (403 o 404).
 - [ ] El botón de WhatsApp abre tu chat con el mensaje y el código.
+- [ ] `https://tudominio.com/ec` y `https://tudominio.com/mx` cargan con su precio (en México, en pesos: "$200 MXN"). Son las direcciones que pones en los anuncios de cada país.
 - [ ] En el panel ves el clic; registras una venta de prueba con ese código ("Con un enlace de activación"); tocas "Enviar por WhatsApp", te mandas el mensaje a ti mismo, abres el enlace, escribes tu nombre y tu email y entras al curso; te llega el email de bienvenida.
 - [ ] En Meta ves Contact y Purchase (con el código de prueba).
 - [ ] Revocas la venta de prueba (ficha del comprador → Revocar acceso).
