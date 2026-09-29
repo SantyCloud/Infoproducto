@@ -72,7 +72,7 @@ return [
             'Empecé hace 3 años gracias a un amigo de Argentina que me mostró este negocio. Desde entonces trabajo desde mi celular y hubo épocas en las que **me despertaba con miles de mensajes** pidiendo servicios.',
             'Hoy disfruto de mi **libertad y mi comodidad**, y en este curso te enseño el mismo método que uso yo.',
         ],
-        'firma' => '[Tu nombre]',
+        'firma' => '', // vacío: la historia va sin firma (decisión del dueño)
     ],
 
     // Oculta (lista vacía)

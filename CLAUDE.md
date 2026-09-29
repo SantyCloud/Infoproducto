@@ -126,8 +126,7 @@ las tareas de fondo que dejó la prueba anterior. Si cambias la estructura de un
 Ya dio (29-09-2026): nombre **Método Revendedor SMM**, WhatsApp **+593 96 847 3532**, su historia (empezó hace 3 años,
 conoció el modelo por un amigo de Argentina, trabaja desde el celular) y **sin garantía**.
 
-- Su nombre para firmar la historia (`contenido/landing.php` → `historia.firma`).
-- Capturas (ingresos y "miles de mensajes") con los datos de los clientes difuminados, en `contenido/capturas/`.
+- (Decidió no firmar la historia con su nombre.) Capturas ya puestas: chats (`mensajes-1`) e ingresos de Ecuador y México (`ingresos-ec-1/2`, `ingresos-mx-1/2`, sacadas de un video y anonimizadas: solo título, monto y hora).
 - Módulos del curso y bonos: está grabando los videos. La landing muestra módulos de EJEMPLO que deben coincidir con el curso real antes de publicar.
 - Dominio (aún no lo elige) y enlace de registro o de referido de smmclixy, más código de bono (opcional).
 - Datos legales en `contenido/negocio.php` (titular, RUC o cédula, ciudad) y email de soporte.
