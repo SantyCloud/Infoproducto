@@ -39,6 +39,7 @@ Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso 
 | Medición | Pixel (PageView, Contact) + API de Conversiones (Contact con el mismo `event_id`; Purchase al crearse la venta: al activar el enlace, o al registrarla con email) | Meta aprende de las ventas reales, aunque se cierren por WhatsApp. Al activar ya tenemos su email. |
 | Purchase | `action_source=website` si la venta trae código (con URL, IP, navegador y fbc/fbp del clic); `chat` si no | Meta solo acepta eventos web con datos del navegador; sin clic de origen, la venta fue por chat. Graph API `v25.0` (configurable con `META_GRAPH_VERSION`). |
 | Privacidad | Medición por **interés legítimo** con aviso en el pie y derecho de oposición (no hay banner de cookies) | Menos fricción en la landing. **Pendiente de validar con un abogado** si algún país exige consentimiento previo. |
+| Estilo visual | El del panel de proveedor (su cara pública): lienzo rosa pastel (`#fff7f9`, `#fdeef3`), tinta ciruela (`#3f122b`, `#754259`), rosa de acción (`#e02768` → `#d0205f`), franjas vino con orilla de nubes y tarjetas blancas con aro rosado. Letra **Zen Maru Gothic** alojada en la web (`public_html/assets/fonts/`, solo latín, 3 grosores, ~35 KB, licencia OFL). Botones de compra en rosa con el ícono de WhatsApp; el verde queda solo para "Enviar por WhatsApp" del panel. Colores en `:root` de `landing.css` y `app.css` | Pedido del dueño (29-09-2026): que la web lleve el estilo y los colores de su panel. La letra no se pide a Google: sin terceros nuevos en la privacidad ni peticiones extra. |
 | Emails sin clave | Sin `RESEND_API_KEY` los emails quedan "simulados" (log + panel) | Se puede probar todo en local; el panel muestra el enlace para enviarlo por WhatsApp. En producción el log no guarda el enlace. |
 | Límites | Panel: 5 intentos/15 min por IP (IPv6 por /64), sin contador global; el dispositivo donde el dueño ya entró (cookie `admin_dispositivo`, firmada con `CLAVE_APP`) tiene su propio contador. `/entrar`: 3 por email cada 15 min, 6 por email al día, 10 por IP cada 15 min y 60 emails al día en total. `/wa`: 30 leads nuevos por hora por IP. `/activar`: 10 intentos por IP cada 15 min y 100 códigos equivocados por hora entre todos | Que nadie pueda dejar al dueño fuera del panel ni gastar el cupo de Resend (100/día) que necesitan los emails de compra. Ver `SEGURIDAD.md`. |
 
@@ -65,7 +66,7 @@ contenido/           lo que edita el dueño:
   legal/*.md         términos, privacidad, reembolsos con y sin garantía (plantillas para revisar con abogado)
   capturas/          capturas originales (ya difuminadas) → se optimizan a public_html/assets/img/capturas/
   curso/             curso de EJEMPLO (el real va en storage/curso/, fuera de Git)
-public_html/         raíz web: index.php (único punto de entrada), .htaccess, robots.txt, favicon.svg, assets/
+public_html/         raíz web: index.php (único punto de entrada), .htaccess, robots.txt, favicon.svg, assets/ (css, js, img, fonts)
 storage/             fuera de Git: base.sqlite, logs/, respaldos/, curso/ (curso real)
 tests/               pruebas: php tests/run.php
 DESPLIEGUE.md        guía paso a paso para Hostinger
@@ -86,6 +87,7 @@ Rutas: `/` landing general · `/ec`, `/mx` landing por país · `/wa` botón de 
 - En las vistas, todo dato va escapado: `<?= e($dato) ?>`. Hay CSP: los `<script>` y `<style>` en línea necesitan `nonce="<?= csp_nonce() ?>"`.
 - Fechas en la BD en **UTC** (`Y-m-d H:i:s`, con `ahora_bd()`); se muestran en `ZONA_HORARIA` (America/Guayaquil). Dinero en **centavos** (INTEGER) y **siempre con su moneda** (`ventas.moneda`): nunca sumar monedas distintas (`formatear_montos()`); precios con `negocio_de_pais()` + `formatear_precio($monto, $moneda)`.
 - Los textos editables van solo en `contenido/` y los secretos solo en `.env`, que nunca se sube a Git.
+- Colores y letra: variables en `:root` de `public_html/assets/css/landing.css` (landing, se incrusta en el HTML) y `app.css` (lo demás). Nada de fuentes ni estilos externos: la CSP solo permite los propios.
 - La landing es **corta y directa** (pedido del dueño): portada, historia breve, resultados, "Todo lo que recibes", 5 preguntas y cierre. **Título, precio, botón y lo que recibe se ven sin bajar** en celulares chicos dentro del navegador de Instagram (≈360x560 y 375x540), también en `/mx`: si cambias esos textos o estilos, vuelve a medirlo. Las demás secciones (problema, cómo funciona, módulos, ¿es para ti?) se ocultan con su lista vacía en `contenido/landing.php` y vuelven al llenarla.
 - Compatibilidad con **PHP 8.2** (Hostinger): no usar `json_validate`, `array_find`, property hooks, constantes tipadas ni otras novedades de 8.3/8.4.
 - Los avisos de PHP se convierten en excepciones (`app/bootstrap.php`), así que el código no debe generar warnings.
@@ -128,7 +130,7 @@ las tareas de fondo que dejó la prueba anterior. Si cambias la estructura de un
 Ya dio (29-09-2026): nombre **Método Revendedor SMM**, WhatsApp **+593 96 847 3532**, su historia (empezó hace 3 años,
 conoció el modelo por un amigo de Argentina, trabaja desde el celular) y **sin garantía**.
 
-- (Decidió no firmar la historia con su nombre.) Capturas ya puestas: chats (`mensajes-1`) e ingresos de Ecuador y México (`ingresos-ec-1/2`, `ingresos-mx-1/2`, sacadas de un video y anonimizadas: solo título, monto y hora).
+- (Decidió no firmar la historia con su nombre.) Capturas ya puestas y aprobadas por él: chats (`mensajes-1`) e ingresos de Ecuador y México (`ingresos-ec-1/2`, `ingresos-mx-1/2`, sacadas de un video y anonimizadas: solo título, monto y hora).
 - Módulos del curso y bonos: está grabando los videos. La landing muestra módulos de EJEMPLO que deben coincidir con el curso real antes de publicar.
 - Dominio (aún no lo elige) y enlace de registro o de referido de smmclixy, más código de bono (opcional).
 - Datos legales en `contenido/negocio.php` (titular, RUC o cédula, ciudad) y email de soporte.

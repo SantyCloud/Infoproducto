@@ -14,7 +14,7 @@
             <p class="suave">Toca el botón para entrar a tu curso en este dispositivo.</p>
             <form method="post" action="/acceso/<?= e($token) ?>">
                 <?= csrf_campo() ?>
-                <button class="boton boton--wa boton--ancho boton--grande" type="submit">Entrar al curso <?= icono('flecha') ?></button>
+                <button class="boton boton--ancho boton--grande" type="submit">Entrar al curso <?= icono('flecha') ?></button>
             </form>
         <?php else: ?>
             <h1>Este enlace ya no sirve</h1>

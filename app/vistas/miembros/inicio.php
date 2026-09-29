@@ -22,7 +22,7 @@ $porcentaje = $total > 0 ? (int) round(count($vistas) / $total * 100) : 0;
     <h1>Hola, <?= e(primer_nombre((string) $comprador['nombre'])) ?> 👋</h1>
     <p><?= $porcentaje === 0 ? 'Empieza por la primera lección. Videos cortos y al grano.' : "Llevas el $porcentaje% del curso. ¡Sigue así!" ?></p>
     <?php if ($siguiente): ?>
-        <a class="boton boton--wa" href="/miembros/leccion/<?= e($siguiente['slug']) ?>"><?= icono('play') ?> <?= $porcentaje === 0 ? 'Empezar' : 'Continuar' ?>: <?= e($siguiente['titulo']) ?></a>
+        <a class="boton" href="/miembros/leccion/<?= e($siguiente['slug']) ?>"><?= icono('play') ?> <?= $porcentaje === 0 ? 'Empezar' : 'Continuar' ?>: <?= e($siguiente['titulo']) ?></a>
     <?php endif; ?>
     <progress class="progreso" value="<?= $porcentaje ?>" max="100" aria-label="Progreso del curso"><?= $porcentaje ?>%</progress>
 </section>

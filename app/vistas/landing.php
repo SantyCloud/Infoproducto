@@ -232,7 +232,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
         </section>
     <?php endif; ?>
 
-    <section class="seccion seccion--oscura oferta" id="oferta">
+    <section class="seccion oferta" id="oferta">
         <div class="contenedor">
             <div class="tarjeta-precio">
                 <h2><?= formato($l['oferta']['titulo']) ?></h2>

@@ -44,12 +44,12 @@ $iconos = ['formulario' => 'regalo', 'ya_activado' => 'check', 'revisa_tu_correo
                     <small>Con este email vuelves a entrar cuando quieras: revísalo bien.</small>
                     <?= $error('email') ?>
                 </div>
-                <button class="boton boton--wa boton--ancho boton--grande" type="submit">Activar mi acceso <?= icono('flecha') ?></button>
+                <button class="boton boton--ancho boton--grande" type="submit">Activar mi acceso <?= icono('flecha') ?></button>
             </form>
         <?php elseif ($pantalla === 'ya_activado'): ?>
             <h1 class="tarjeta--centro">Tu acceso ya está activado</h1>
             <p class="suave">Ya activaste este código con <strong><?= e($email) ?></strong>. Entra al curso desde aquí; si te pide tu email, escribe ese mismo.</p>
-            <a class="boton boton--wa boton--ancho boton--grande" href="/miembros">Entrar al curso <?= icono('flecha') ?></a>
+            <a class="boton boton--ancho boton--grande" href="/miembros">Entrar al curso <?= icono('flecha') ?></a>
         <?php elseif ($pantalla === 'revisa_tu_correo'): ?>
             <h1 class="tarjeta--centro">Revisa tu correo</h1>
             <p>Tu compra quedó registrada. Como <strong><?= e($email) ?></strong> ya tenía una cuenta, te enviamos a ese correo un enlace para entrar.</p>

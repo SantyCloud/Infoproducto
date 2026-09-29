@@ -134,6 +134,31 @@ prueba('las páginas públicas no nombran la web de proveedor (se revela solo de
     foreach ($paginas as $pagina => $respuesta) {
         afirmar(!str_contains(strtolower($respuesta['cuerpo']), $nombre), "$pagina menciona $nombre.");
     }
+    foreach (['landing.css', 'app.css'] as $hoja) {
+        $css = strtolower((string) file_get_contents(RAIZ . "/public_html/assets/css/$hoja"));
+        afirmar(!str_contains($css, $nombre), "$hoja (se descarga desde la web) menciona $nombre.");
+    }
+});
+
+prueba('la letra de la web se sirve desde la propia web: existe y no se pide a Google', function () {
+    bd_de_prueba();
+    simular_peticion();
+    $landing = pagina_inicio()['cuerpo'];
+    foreach (['landing.css', 'app.css'] as $hoja) {
+        $css = (string) file_get_contents(RAIZ . "/public_html/assets/css/$hoja");
+        afirmar(!preg_match('#fonts\.(googleapis|gstatic)\.com#', $css), "$hoja no debe cargar letras de Google.");
+        preg_match_all('#url\("(/assets/fonts/[^"]+)"\)#', $css, $m);
+        afirmar(count($m[1]) >= 3, "$hoja debe declarar la letra Zen Maru Gothic.");
+        foreach ($m[1] as $ruta) {
+            afirmar(is_file(RAIZ . '/public_html' . $ruta), "Falta $ruta (lo usa $hoja).");
+        }
+    }
+    preg_match_all('#<link rel="preload" href="(/assets/fonts/[^"]+)"#', $landing, $m);
+    afirmar(count($m[1]) === 3, 'La landing precarga los tres grosores de la letra.');
+    foreach ($m[1] as $ruta) {
+        afirmar(is_file(RAIZ . '/public_html' . $ruta), "La landing precarga $ruta, que no existe.");
+    }
+    afirmar(is_file(RAIZ . '/public_html/assets/fonts/OFL-zen-maru-gothic.txt'), 'La licencia de la letra va junto a ella.');
 });
 
 prueba('la landing guarda de qué anuncio viene la visita (UTM, fbclid y visitante)', function () {

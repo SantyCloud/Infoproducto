@@ -18,9 +18,13 @@ Options -Indexes
     Header always set X-Content-Type-Options "nosniff"
 </IfModule>
 
-# Caché larga para CSS, JS e imágenes: sus URLs llevan ?v= y cambian cuando cambia el archivo
+# Letra de la web (Zen Maru Gothic, en assets/fonts/): si cambia, el archivo cambia de nombre
+AddType font/woff2 .woff2
+
+# Caché larga para CSS, JS, imágenes y letras: sus URLs llevan ?v= (o, las letras, un nombre fijo)
 <IfModule mod_expires.c>
     ExpiresActive On
+    ExpiresByType font/woff2 "access plus 1 year"
     ExpiresByType text/css "access plus 1 year"
     ExpiresByType application/javascript "access plus 1 year"
     ExpiresByType text/javascript "access plus 1 year"

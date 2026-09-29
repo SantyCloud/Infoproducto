@@ -19,6 +19,7 @@ $menu = [
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#3f122b">
     <title><?= e($titulo) ?></title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">

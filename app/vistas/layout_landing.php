@@ -15,7 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title><?= e($titulo) ?></title>
     <meta name="description" content="<?= e($descripcion) ?>">
-    <meta name="theme-color" content="#0b1020">
+    <meta name="theme-color" content="#3f122b">
     <link rel="canonical" href="<?= e($url) ?>">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="es_LA">
@@ -23,6 +23,9 @@
     <meta property="og:description" content="<?= e($descripcion) ?>">
     <meta property="og:url" content="<?= e($url) ?>">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <?php foreach ([900, 700, 500] as $peso): // la letra de la primera pantalla, antes que nada ?>
+    <link rel="preload" href="/assets/fonts/zen-maru-gothic-<?= $peso ?>.woff2" as="font" type="font/woff2" crossorigin>
+    <?php endforeach; ?>
     <style nonce="<?= e(csp_nonce()) ?>"><?= css_en_linea('landing.css') ?></style>
     <?php if ($pixel_id): ?>
     <script nonce="<?= e(csp_nonce()) ?>">
