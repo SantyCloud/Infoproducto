@@ -647,6 +647,11 @@ textarea {
     line-height: 1.1;
 }
 
+.metrica__valor--varias {
+    font-size: 1.3rem;
+    line-height: 1.25;
+}
+
 .metrica__nombre {
     color: var(--tinta-2);
     font-size: 0.85rem;

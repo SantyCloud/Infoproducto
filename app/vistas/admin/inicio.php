@@ -27,7 +27,8 @@
 <div class="metricas">
     <?php foreach ($metricas as [$nombre, $valor]): ?>
         <div class="metrica">
-            <span class="metrica__valor"><?= e((string) $valor) ?></span>
+            <?php $partes = explode(' · ', (string) $valor); // varias monedas: una por línea ?>
+            <span class="metrica__valor<?= count($partes) > 1 ? ' metrica__valor--varias' : '' ?>"><?= implode('<br>', array_map('e', $partes)) ?></span>
             <span class="metrica__nombre"><?= e($nombre) ?></span>
         </div>
     <?php endforeach; ?>

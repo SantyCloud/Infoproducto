@@ -158,5 +158,7 @@ prueba('el panel suma cada moneda por separado', function () {
     venta_registrar(datos_venta(['monto' => '10']));
     venta_registrar(datos_venta(['email' => 'otro@correo.com', 'monto' => '200', 'moneda' => $moneda]));
     simular_peticion([], [COOKIE_ADMIN => sesion_crear('admin', null)]);
-    afirmar_contiene(e(formatear_montos("USD:1000,$moneda:20000")), admin_inicio()['cuerpo']);
+    $partes = explode(' · ', formatear_montos("USD:1000,$moneda:20000"));
+    afirmar_igual(2, count($partes));
+    afirmar_contiene(implode('<br>', array_map('e', $partes)), admin_inicio()['cuerpo'], 'Cada moneda en su línea, sin mezclarse.');
 });
