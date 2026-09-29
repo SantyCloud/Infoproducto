@@ -10,9 +10,10 @@
  */
 $valor = fn (string $campo) => e((string) ($valores[$campo] ?? ''));
 $error = fn (string $campo) => isset($errores[$campo]) ? '<small class="error-campo">' . e($errores[$campo]) . '</small>' : '';
+$entrega = ($valores['entrega'] ?? 'activacion') === 'email' ? 'email' : 'activacion';
 ?>
 <h1>Registrar venta</h1>
-<p class="suave">Cuando confirmes el pago en WhatsApp, registra aquí la venta: se crea el acceso, se envía el email y se avisa a Meta.</p>
+<p class="suave">Cuando confirmes el pago en WhatsApp, regístralo aquí. Lo normal es que te demos un enlace para enviárselo al cliente: al abrirlo pone su nombre y su email y entra al curso.</p>
 
 <?php if ($errores): ?><div class="aviso aviso--error" role="alert">Revisa los campos marcados.</div><?php endif; ?>
 
@@ -29,7 +30,7 @@ $error = fn (string $campo) => isset($errores[$campo]) ? '<small class="error-ca
     </div>
 <?php endif; ?>
 
-<form class="tarjeta formulario" method="post" action="/admin/ventas">
+<form class="tarjeta formulario formulario-venta" method="post" action="/admin/ventas">
     <?= csrf_campo() ?>
     <input type="hidden" name="clave_formulario" value="<?= e($clave_formulario) ?>">
 
@@ -42,33 +43,10 @@ $error = fn (string $campo) => isset($errores[$campo]) ? '<small class="error-ca
 
     <div class="fila-campos">
         <div class="campo">
-            <label for="nombre">Nombre</label>
-            <input id="nombre" name="nombre" type="text" value="<?= $valor('nombre') ?>" required autocomplete="off">
-            <?= $error('nombre') ?>
-        </div>
-        <div class="campo">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" value="<?= $valor('email') ?>" required autocomplete="off" inputmode="email">
-            <small>Revísalo bien: ahí le llega el acceso.</small>
-            <?= $error('email') ?>
-        </div>
-    </div>
-
-    <div class="fila-campos">
-        <div class="campo">
-            <label for="whatsapp">WhatsApp</label>
-            <input id="whatsapp" name="whatsapp" type="tel" value="<?= $valor('whatsapp') ?>" placeholder="593991234567" inputmode="tel">
-            <small>Con código de país. Ayuda a Meta a reconocer la compra.</small>
-            <?= $error('whatsapp') ?>
-        </div>
-        <div class="campo">
             <label for="monto">Monto cobrado</label>
             <input id="monto" name="monto" type="text" value="<?= $valor('monto') ?>" placeholder="Ej. 10 o 200" required inputmode="decimal">
             <?= $error('monto') ?>
         </div>
-    </div>
-
-    <div class="fila-campos">
         <div class="campo">
             <label for="moneda">Moneda</label>
             <select id="moneda" name="moneda">
@@ -88,6 +66,9 @@ $error = fn (string $campo) => isset($errores[$campo]) ? '<small class="error-ca
             <small>En automático, la de la página por la que llegó el cliente<?= $otras ? ' (' . e(implode(', ', $otras)) . '; las demás: USD)' : '' ?>.</small>
             <?= $error('moneda') ?>
         </div>
+    </div>
+
+    <div class="fila-campos">
         <div class="campo">
             <label for="metodo_pago">Método de pago</label>
             <select id="metodo_pago" name="metodo_pago">
@@ -102,10 +83,45 @@ $error = fn (string $campo) => isset($errores[$campo]) ? '<small class="error-ca
         </div>
     </div>
 
-    <label class="casilla">
+    <fieldset class="opciones">
+        <legend class="etiqueta-campo">¿Cómo le das el acceso?</legend>
+        <label class="opcion">
+            <input type="radio" name="entrega" value="activacion"<?= $entrega === 'activacion' ? ' checked' : '' ?>>
+            <span><strong>Con un enlace de activación por WhatsApp</strong> <small>Él mismo escribe su nombre y su email. No tienes que pedírselos.</small></span>
+        </label>
+        <label class="opcion">
+            <input type="radio" name="entrega" value="email"<?= $entrega === 'email' ? ' checked' : '' ?>>
+            <span><strong>Ya tengo su email</strong> <small>Le das el acceso ahora y le llega a su correo.</small></span>
+        </label>
+    </fieldset>
+
+    <div class="solo-email">
+        <div class="fila-campos">
+            <div class="campo">
+                <label for="nombre">Nombre</label>
+                <input id="nombre" name="nombre" type="text" value="<?= $valor('nombre') ?>" autocomplete="off">
+                <?= $error('nombre') ?>
+            </div>
+            <div class="campo">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" value="<?= $valor('email') ?>" autocomplete="off" inputmode="email">
+                <small>Revísalo bien: ahí le llega el acceso.</small>
+                <?= $error('email') ?>
+            </div>
+        </div>
+    </div>
+
+    <div class="campo">
+        <label for="whatsapp">WhatsApp del cliente (opcional)</label>
+        <input id="whatsapp" name="whatsapp" type="tel" value="<?= $valor('whatsapp') ?>" placeholder="593991234567" inputmode="tel">
+        <small>Con código de país. Así el botón "Enviar por WhatsApp" abre directo su chat, y Meta reconoce mejor la compra.</small>
+        <?= $error('whatsapp') ?>
+    </div>
+
+    <label class="casilla solo-email">
         <input type="checkbox" name="enviar_email" value="1"<?= !empty($valores['enviar_email']) ? ' checked' : '' ?>>
         <span>Enviarle el email con su acceso</span>
     </label>
 
-    <button class="boton boton--grande" type="submit"><?= icono('check') ?> Registrar venta y dar acceso</button>
+    <button class="boton boton--grande" type="submit"><?= icono('check') ?> Registrar venta</button>
 </form>

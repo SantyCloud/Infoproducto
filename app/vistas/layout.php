@@ -15,5 +15,6 @@
 </head>
 <body>
 <?= $cuerpo ?>
+<script src="<?= e(asset('js/formularios.js')) ?>" defer></script>
 </body>
 </html>

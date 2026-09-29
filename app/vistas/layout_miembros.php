@@ -31,5 +31,6 @@
 <main class="contenedor">
 <?= $cuerpo ?>
 </main>
+<script src="<?= e(asset('js/formularios.js')) ?>" defer></script>
 </body>
 </html>

@@ -140,7 +140,7 @@ return [
         'lista' => [
             ['pregunta' => '¿Necesito experiencia?', 'respuesta' => 'No. Empiezas desde cero y todo se hace desde el celular.'],
             ['pregunta' => '¿Tengo que invertir algo más?', 'respuesta' => 'Solo el saldo para los pedidos de tus clientes, que recargas a medida que vendes. Puedes empezar con poco dinero.'],
-            ['pregunta' => '¿Cómo pago y cuándo recibo el acceso?', 'respuesta' => 'Por WhatsApp, con {metodos_pago}. Apenas confirmo tu pago, te llega el acceso a tu email.'],
+            ['pregunta' => '¿Cómo pago y cuándo recibo el acceso?', 'respuesta' => 'Por WhatsApp, con {metodos_pago}. Apenas confirmo tu pago, te envío por WhatsApp tu enlace para activar tu acceso.'],
             ['pregunta' => '¿Cuánto voy a ganar?', 'respuesta' => 'Depende de ti: de cuántos clientes consigas y del margen que pongas. No hay ingresos garantizados.'],
             ['pregunta' => '¿Sirve para mi país?', 'respuesta' => 'Sí. Tus clientes pueden estar en cualquier país y todo funciona igual desde donde estés.'],
             // Solo aparece si hay garantía (garantia_dias mayor que 0 en negocio.php)

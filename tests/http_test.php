@@ -200,7 +200,7 @@ prueba('recorrido completo: panel → venta → enlace → área de miembros →
         [$estado, , $html] = navegar($dueno, "$url/admin/ventas", 'POST', [
             '_csrf' => campo_oculto($html, '_csrf'),
             'clave_formulario' => campo_oculto($html, 'clave_formulario'),
-            'nombre' => 'Luis Mora', 'email' => 'luis@correo.com', 'whatsapp' => '593998887766',
+            'entrega' => 'email', 'nombre' => 'Luis Mora', 'email' => 'luis@correo.com', 'whatsapp' => '593998887766',
             'monto' => '10', 'metodo_pago' => 'PayPal', 'enviar_email' => '1',
         ]);
         afirmar_igual(200, $estado);
@@ -246,6 +246,57 @@ prueba('recorrido completo: panel → venta → enlace → área de miembros →
         navegar($dueno, "$url/admin/compradores/1/revocar", 'POST', ['_csrf' => campo_oculto($html, '_csrf')]);
         [$estado] = navegar($alumno, "$url/miembros");
         afirmar_igual(302, $estado, 'Con el acceso revocado, vuelve a /entrar.');
+    } finally {
+        detener_servidor($servidor);
+    }
+});
+
+prueba('recorrido con enlace de activación: panel → pago → el cliente activa su acceso y entra al curso', function () {
+    $servidor = servidor_de_prueba([
+        'ADMIN_USUARIO' => 'dueno',
+        'ADMIN_CLAVE_HASH' => password_hash('clave-de-prueba-123', PASSWORD_BCRYPT, ['cost' => 4]),
+    ]);
+    $url = $servidor['url'];
+    try {
+        // 1. El dueño registra el pago sin pedirle el email al cliente
+        $dueno = [];
+        [, , $html] = navegar($dueno, "$url/admin/entrar");
+        navegar($dueno, "$url/admin/entrar", 'POST', ['usuario' => 'dueno', 'clave' => 'clave-de-prueba-123', '_csrf' => campo_oculto($html, '_csrf')]);
+        [, , $html] = navegar($dueno, "$url/admin/ventas/nueva");
+        [$estado, , $html] = navegar($dueno, "$url/admin/ventas", 'POST', [
+            '_csrf' => campo_oculto($html, '_csrf'),
+            'clave_formulario' => campo_oculto($html, 'clave_formulario'),
+            'entrega' => 'activacion', 'monto' => '10', 'moneda' => 'AUTO', 'metodo_pago' => 'Transferencia bancaria',
+        ]);
+        afirmar_igual(200, $estado);
+        preg_match('#' . preg_quote($url, '#') . '/activar/[A-Z0-9]{4}-[A-Z0-9]{4}#', $html, $m);
+        $enlace = $m[0] ?? '';
+        afirmar($enlace !== '', 'El resultado muestra el enlace de activación.');
+        afirmar_contiene('https://wa.me/?text=', $html, 'Sin su número, WhatsApp deja elegir el chat.');
+
+        // 2. El cliente abre el enlace, escribe su nombre y su email y entra al curso
+        $cliente = [];
+        [$estado, $cabeceras, $html] = navegar($cliente, $enlace);
+        afirmar_igual(200, $estado);
+        afirmar_contiene('Referrer-Policy: same-origin', $cabeceras);
+        [$estado, $cabeceras] = navegar($cliente, "$url/activar", 'POST', [
+            '_csrf' => campo_oculto($html, '_csrf'), 'codigo' => campo_oculto($html, 'codigo'), 'con_enlace' => '1',
+            'nombre' => 'Carla Ruiz', 'email' => 'carla@correo.com',
+        ]);
+        afirmar_igual(302, $estado);
+        afirmar_contiene('Location: /miembros?bienvenida=1', $cabeceras);
+        [$estado, , $html] = navegar($cliente, "$url/miembros?bienvenida=1");
+        afirmar_igual(200, $estado);
+        afirmar_contiene('Hola, Carla', $html);
+        afirmar_contiene('carla@correo.com', $html);
+
+        // 3. El enlace ya no sirve para nadie más, y el dueño ve la venta
+        $otro = [];
+        [$estado] = navegar($otro, $enlace);
+        afirmar_igual(404, $estado);
+        [, , $html] = navegar($dueno, "$url/admin/ventas");
+        afirmar_contiene('Carla Ruiz', $html);
+        afirmar(!str_contains($html, 'Por activar'), 'Ya no queda pendiente de activar.');
     } finally {
         detener_servidor($servidor);
     }

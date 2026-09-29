@@ -61,7 +61,7 @@ function datos_de_la_visita(array $consulta, array $cookies, array $servidor): a
 }
 
 /**
- * Registra el clic. Si el mismo visitante tiene un lead de los últimos 7 días que aún no compró,
+ * Registra el clic. Si el mismo visitante tiene un lead de los últimos 7 días que aún no pagó,
  * reutiliza su código. Devuelve la fila del lead más 'nuevo' => true|false.
  */
 function lead_registrar(array $visita): array
@@ -71,6 +71,7 @@ function lead_registrar(array $visita): array
         $existente = db_fila(
             'SELECT l.id FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id
              WHERE l.visitante_id = ? AND l.creado_en >= ? AND v.id IS NULL
+               AND NOT EXISTS (SELECT 1 FROM activaciones a WHERE a.lead_id = l.id AND a.anulado_en IS NULL)
              ORDER BY l.id DESC LIMIT 1',
             [$visita['visitante_id'], gmdate('Y-m-d H:i:s', time() - 7 * 86400)]
         );

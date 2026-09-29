@@ -57,14 +57,15 @@ Las ventas no se hacen en el sitio web: el sitio no cobra ni recibe pagos. El pr
 2. Conversas con nosotros y te indicamos cómo pagar.
 3. Pagas con alguno de estos métodos: {metodos_pago}.
 4. Confirmamos tu pago de forma manual, así que la confirmación puede no ser inmediata.
-5. Te enviamos el acceso al curso por email. También podemos enviarte el enlace por WhatsApp.
+5. Te enviamos por WhatsApp un enlace para activar tu acceso: al abrirlo escribes tu nombre y tu email y entras al curso. También podemos crear tu acceso con tu email y enviártelo por correo.
 
-Para crear tu acceso usamos tu nombre, tu email y tu número de WhatsApp, así que debes darnos datos verdaderos y un email al que tengas acceso. Al comprar, aceptas recibir por email y por WhatsApp los mensajes necesarios sobre tu compra y tu acceso. Para efectos de la garantía, la fecha de compra es el día en que confirmamos tu pago.
+Para crear tu acceso usamos tu nombre, tu email y tu número de WhatsApp, así que debes darnos (o escribir al activar tu acceso) datos verdaderos y un email al que tengas acceso. Al comprar, aceptas recibir por email y por WhatsApp los mensajes necesarios sobre tu compra y tu acceso. Para efectos de la garantía, la fecha de compra es el día en que confirmamos tu pago.
 
 ## Entrega y acceso
 
-- El acceso llega a tu email como un enlace personal (un "enlace mágico"), sin contraseña.
-- El enlace es de un solo uso. Si necesitas volver a entrar, por ejemplo desde otro dispositivo, puedes pedir uno nuevo.
+- Activas tu acceso con el enlace personal que te enviamos por WhatsApp, sin contraseña. Sirve una sola vez y vence a los 30 días; si se te pasa, escríbenos y te enviamos otro.
+- Si el email que escribes ya tenía una cuenta, el enlace para entrar te llega a ese email.
+- Para volver a entrar, por ejemplo desde otro dispositivo, pides con tu email un enlace nuevo (un "enlace mágico" de un solo uso).
 - Si el email no te llega, revisa las carpetas de spam y promociones, o escríbenos.
 - Tu cuenta puede tener sesiones abiertas en hasta 3 dispositivos al mismo tiempo.
 - Algunos videos pueden estar alojados en plataformas de terceros, como YouTube o Google Drive.

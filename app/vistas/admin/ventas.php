@@ -1,9 +1,11 @@
 <?php
 /**
  * Lista de ventas.
- * @var array $ventas
- * @var bool  $hay_mas
- * @var int   $pagina
+ * @var array  $ventas
+ * @var bool   $hay_mas
+ * @var int    $pagina
+ * @var array  $por_activar  pagos que el cliente todavía no activa
+ * @var string $mensaje      resultado de una acción (anular un pago…)
  */
 $estadosMeta = ['enviado' => ['Enviado', 'ok'], 'error' => ['Error', 'error'], 'descartado' => ['Descartado', 'error'], 'pendiente' => ['Pendiente', 'alerta'], 'enviando' => ['Enviando', 'alerta']];
 ?>
@@ -14,6 +16,10 @@ $estadosMeta = ['enviado' => ['Enviado', 'ok'], 'error' => ['Error', 'error'], '
         <a class="boton" href="/admin/ventas/nueva"><?= icono('mas') ?> Registrar venta</a>
     </div>
 </div>
+<?php if ($mensaje): ?><div class="aviso aviso--info" role="status"><?= e($mensaje) ?></div><?php endif; ?>
+<?php if ($por_activar): ?>
+    <?= plantilla('admin/_activaciones', ['activaciones' => $por_activar]) ?>
+<?php endif; ?>
 <?php if ($ventas): ?>
     <div class="tabla-contenedor">
         <table class="tabla">

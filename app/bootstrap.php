@@ -29,6 +29,7 @@ require RAIZ . '/app/lib/seguridad.php';
 require RAIZ . '/app/lib/accesos.php';
 require RAIZ . '/app/lib/emails.php';
 require RAIZ . '/app/lib/ventas.php';
+require RAIZ . '/app/lib/activaciones.php';
 require RAIZ . '/app/lib/curso.php';
 require RAIZ . '/app/lib/mantenimiento.php';
 require RAIZ . '/app/paginas/publico.php';

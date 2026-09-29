@@ -311,6 +311,103 @@ textarea {
     }
 }
 
+/* Formulario de venta: cómo recibe el acceso */
+
+.opciones {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.opciones legend {
+    margin-bottom: 6px;
+    padding: 0;
+    font-weight: 650;
+    font-size: 0.95rem;
+}
+
+.opcion {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.opcion + .opcion {
+    margin-top: 8px;
+}
+
+.opcion input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 2px 0 0;
+    accent-color: var(--acento);
+}
+
+.opcion small {
+    display: block;
+    color: var(--tinta-3);
+}
+
+.opcion:has(input:checked) {
+    border-color: var(--acento);
+    background: var(--acento-suave);
+}
+
+/* Con el enlace de activación, el nombre y el email los escribe el cliente */
+.formulario-venta:has(input[name="entrega"][value="activacion"]:checked) .solo-email {
+    display: none;
+}
+
+/* Enlace de activación para enviar por WhatsApp */
+
+.codigo-activacion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+}
+
+.codigo-activacion .codigo {
+    font-size: 1.5rem;
+}
+
+.mensaje-activacion {
+    min-height: 190px;
+    font-size: 15px;
+}
+
+/* Pagos por activar (tarjetas: en el celular se ven los botones sin desplazar) */
+
+.lista-pagos {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.lista-pagos li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background: #fafbfe;
+}
+
+.lista-pagos p {
+    margin: 0;
+}
+
 /* Avisos */
 
 .aviso {

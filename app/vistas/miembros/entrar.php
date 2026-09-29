@@ -27,6 +27,7 @@ $whatsapp = preg_replace('/\D/', '', (string) contenido('negocio')['whatsapp']['
                 </div>
                 <button class="boton boton--ancho boton--grande" type="submit">Enviarme el enlace</button>
             </form>
+            <p class="suave chico separado">¿Acabas de pagar y te llegó un código por WhatsApp? <a href="/activar">Activa tu acceso aquí</a>.</p>
         <?php endif; ?>
         <p class="suave chico separado">¿Problemas para entrar? <a href="https://wa.me/<?= e($whatsapp) ?>" target="_blank" rel="noopener">Escríbeme por WhatsApp</a>.</p>
     </div>

@@ -4,9 +4,13 @@ declare(strict_types=1);
 /*
  * Ventas: lo que pasa cuando registras en el panel una venta cobrada por WhatsApp.
  *
- * En una sola transacción se crea (o actualiza) el comprador, la venta, el acceso y el enlace
- * de primer acceso. Después se envían el email y el evento Purchase a Meta. Registrar dos veces
- * el mismo formulario o el mismo código NO duplica nada.
+ * Hay dos formas de dar el acceso:
+ * - Enlace de activación (lo normal): se registra el pago y el cliente activa su acceso con su nombre y
+ *   su email; la venta se crea en ese momento (ver activaciones.php).
+ * - Con su email: en una sola transacción se crea (o actualiza) el comprador, la venta, el acceso y el
+ *   enlace de primer acceso. Después se envían el email y el evento Purchase a Meta.
+ *
+ * Registrar dos veces el mismo formulario o el mismo código NO duplica nada.
  */
 
 /** Valida el formulario de venta. Devuelve [datos limpios, errores por campo]. */
@@ -22,16 +26,24 @@ function venta_validar(array $entrada): array
         'codigo' => normalizar_codigo(texto_de($entrada['codigo'] ?? null)),
         'moneda' => strtoupper(limpiar($entrada['moneda'] ?? '', 10)),
         'enviar_email' => !empty($entrada['enviar_email']),
+        // Cómo recibe el acceso: 'activacion' (enlace para que él ponga su nombre y su email) o 'email'
+        'entrega' => texto_de($entrada['entrega'] ?? null) === 'activacion' ? 'activacion' : 'email',
         'clave_formulario' => preg_match('/^[A-Za-z0-9_-]{20,64}$/', texto_de($entrada['clave_formulario'] ?? null))
             ? (string) $entrada['clave_formulario'] : null,
         'lead' => null,
     ];
     $errores = [];
-    if ($datos['nombre'] === '') {
-        $errores['nombre'] = 'Escribe el nombre del comprador.';
-    }
-    if (!filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
-        $errores['email'] = 'Revisa el email: no parece válido.';
+    if ($datos['entrega'] === 'activacion') {
+        // Su nombre y su email los escribe él al activar
+        $datos['nombre'] = '';
+        $datos['email'] = '';
+    } else {
+        if ($datos['nombre'] === '') {
+            $errores['nombre'] = 'Escribe el nombre del comprador.';
+        }
+        if (!filter_var($datos['email'], FILTER_VALIDATE_EMAIL)) {
+            $errores['email'] = 'Revisa el email: no parece válido.';
+        }
     }
     if ($datos['whatsapp'] !== '' && (strlen($datos['whatsapp']) < 8 || strlen($datos['whatsapp']) > 15)) {
         $errores['whatsapp'] = 'El WhatsApp debe tener entre 8 y 15 dígitos, con código de país (ej. 593991234567).';
@@ -41,11 +53,10 @@ function venta_validar(array $entrada): array
     }
     if ($datos['codigo'] !== '') {
         $datos['lead'] = db_fila('SELECT * FROM leads WHERE codigo = ?', [$datos['codigo']]);
-        $ventaDelLead = $datos['lead'] ? db_valor('SELECT id FROM ventas WHERE lead_id = ?', [$datos['lead']['id']]) : null;
         if ($datos['lead'] === null) {
             $errores['codigo'] = "No hay ningún clic con el código {$datos['codigo']}. Revísalo o déjalo vacío.";
-        } elseif ($ventaDelLead !== null && !venta_por_clave($datos['clave_formulario'])) {
-            $errores['codigo'] = "El código {$datos['codigo']} ya tiene una venta registrada (#$ventaDelLead).";
+        } elseif (($ocupado = lead_ya_pagado($datos['lead'], $datos['clave_formulario'])) !== null) {
+            $errores['codigo'] = $ocupado;
         }
     }
     // Moneda: la que elijas o, en automático, la de la página por la que llegó el cliente
@@ -55,6 +66,26 @@ function venta_validar(array $entrada): array
         $errores['moneda'] = 'Elige la moneda en que te pagó.';
     }
     return [$datos, $errores];
+}
+
+/**
+ * Si el clic ya tiene una venta o un pago por activar de OTRO formulario, el mensaje de error; si no, null.
+ * (El mismo formulario enviado otra vez no es un error: se muestra lo que ya se registró.)
+ */
+function lead_ya_pagado(array $lead, ?string $clave): ?string
+{
+    $venta = db_fila('SELECT id, clave_formulario FROM ventas WHERE lead_id = ?', [$lead['id']]);
+    if ($venta !== null && ($clave === null || $venta['clave_formulario'] !== $clave)) {
+        return "El código {$lead['codigo']} ya tiene una venta registrada (#{$venta['id']}).";
+    }
+    $pendiente = db_fila(
+        'SELECT id, clave_formulario FROM activaciones WHERE lead_id = ? AND usado_en IS NULL AND anulado_en IS NULL',
+        [$lead['id']]
+    );
+    if ($pendiente !== null && ($clave === null || $pendiente['clave_formulario'] !== $clave)) {
+        return "El código {$lead['codigo']} ya tiene un pago registrado que falta activar (#{$pendiente['id']}, en Ventas → Por activar).";
+    }
+    return null;
 }
 
 function venta_por_clave(?string $clave): ?array
@@ -73,28 +104,10 @@ function venta_registrar(array $datos): array
         return venta_ya_registrada($repetida);
     }
     try {
-        $resultado = db_transaccion(function () use ($datos): array {
-            $comprador = comprador_guardar($datos['nombre'], $datos['email'], $datos['whatsapp'] ?: null);
-            $ventaId = db_insertar('ventas', [
-                'comprador_id' => $comprador['id'],
-                'lead_id' => $datos['lead']['id'] ?? null,
-                'monto_centavos' => (int) round((float) $datos['monto'] * 100),
-                'moneda' => $datos['moneda'] ?? 'USD',
-                'metodo_pago' => $datos['metodo_pago'] ?: null,
-                'referencia_pago' => $datos['referencia_pago'] ?: null,
-                'clave_formulario' => $datos['clave_formulario'],
-                'creado_en' => ahora_bd(),
-            ]);
-            acceso_otorgar((int) $comprador['id'], $ventaId);
-            $venta = db_fila('SELECT * FROM ventas WHERE id = ?', [$ventaId]);
-            return [
-                'repetida' => false,
-                'venta' => $venta,
-                'comprador' => $comprador,
-                'enlace' => enlace_acceso_crear((int) $comprador['id']),
-                'evento_meta' => meta_purchase_para_venta($venta, $comprador, $datos['lead']),
-            ];
-        });
+        $resultado = db_transaccion(fn (): array => venta_crear(
+            comprador_guardar($datos['nombre'], $datos['email'], $datos['whatsapp'] ?: null),
+            $datos
+        ));
     } catch (PDOException $error) {
         // Dos envíos simultáneos del mismo formulario: el segundo choca con la restricción UNIQUE
         $repetida = venta_por_clave($datos['clave_formulario']);
@@ -110,6 +123,33 @@ function venta_registrar(array $datos): array
         : null;
     $resultado['meta'] = $resultado['evento_meta'] !== null ? meta_enviar_evento($resultado['evento_meta']) : null;
     return $resultado;
+}
+
+/**
+ * Crea la venta y da el acceso; deja listos el enlace de primer acceso y el evento Purchase.
+ * No abre transacción: la abre quien la llama (venta_registrar o activacion_canjear).
+ */
+function venta_crear(array $comprador, array $datos): array
+{
+    $ventaId = db_insertar('ventas', [
+        'comprador_id' => $comprador['id'],
+        'lead_id' => $datos['lead']['id'] ?? null,
+        'monto_centavos' => $datos['monto_centavos'] ?? (int) round((float) $datos['monto'] * 100),
+        'moneda' => $datos['moneda'] ?? 'USD',
+        'metodo_pago' => $datos['metodo_pago'] ?: null,
+        'referencia_pago' => $datos['referencia_pago'] ?: null,
+        'clave_formulario' => $datos['clave_formulario'],
+        'creado_en' => $datos['creado_en'] ?? ahora_bd(),
+    ]);
+    acceso_otorgar((int) $comprador['id'], $ventaId);
+    $venta = db_fila('SELECT * FROM ventas WHERE id = ?', [$ventaId]);
+    return [
+        'repetida' => false,
+        'venta' => $venta,
+        'comprador' => $comprador,
+        'enlace' => enlace_acceso_crear((int) $comprador['id']),
+        'evento_meta' => meta_purchase_para_venta($venta, $comprador, $datos['lead']),
+    ];
 }
 
 function venta_ya_registrada(array $venta): array

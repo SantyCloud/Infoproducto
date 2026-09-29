@@ -29,6 +29,9 @@ se registran desde el panel, con sesión de administrador.
 |---|---|---|
 | Crear un acceso sin ser el dueño | Solo `/admin` (con sesión) crea accesos; todas sus páginas redirigen al login sin sesión | `ventas`: "el panel exige iniciar sesión en todas sus páginas" |
 | Adivinar un enlace mágico | 256 bits aleatorios; en la base solo se guarda su hash (HMAC con `CLAVE_APP`) | `miembros`: "se guarda el hash del enlace, nunca el enlace" |
+| Adivinar un código de activación (`/activar`) | 8 caracteres sin letras confusas (unos 40 bits); en la base solo su hash; 10 intentos cada 15 minutos por IP (en IPv6, por red /64) y, entre todos, 100 códigos equivocados por hora; vence a los 30 días. Con esos límites, probar al azar tardaría miles de años | `activaciones`: "probar códigos al azar tiene límite…", "solo se guarda el hash del código" |
+| Usar dos veces el mismo código | Se marca como usado en la misma transacción que crea la venta: solo una petición puede hacerlo. Un enlace nuevo anula el anterior; un pago anulado ya no se activa | `activaciones`: "sirve una sola vez", "un enlace nuevo anula el anterior…" |
+| Entrar a una cuenta ajena escribiendo su email al activar | Si el email ya es de un comprador, no se abre sesión ni se cambia su nombre: la compra se le suma y el enlace para entrar llega a **ese** correo | `activaciones`: "si el email ya es de un comprador…" |
 | Reutilizar o compartir el enlace | Un solo uso (consumo atómico en la base, ni con dos clics simultáneos), vence (7 días / 30 minutos) y el nuevo anula los anteriores | `miembros`: "sirve una sola vez", "vence…"; `http`: el enlace usado da 410 |
 | Antivirus del correo que "gastan" el enlace | Abrir el enlace solo muestra un botón; se consume al pulsarlo (POST) | `http`: abrirlo dos veces no lo gasta |
 | Compartir la cuenta | Máximo 3 dispositivos; el cuarto cierra la sesión más antigua | `miembros`: "como máximo 3 dispositivos" |
@@ -59,7 +62,7 @@ se registran desde el panel, con sesión de administrador.
 | Fórmulas maliciosas al abrir el CSV en Excel | Todo va entre comillas y se neutraliza con un apóstrofo cualquier `= + - @` al inicio del texto **o después de una coma o un punto y coma** (por si Excel separa las columnas con otro carácter) | `ventas`: "exportar CSV…" |
 | Datos personales enviados a Meta | Email, teléfono y nombre van en hash SHA-256; IP y navegador de los clics se borran a los 90 días (cron) | `meta`, `mantenimiento` |
 | Cookies robables | Sesiones `HttpOnly`, `Secure` con https, `SameSite` (`Strict` en el panel) | `ventas`: cookie del panel |
-| El enlace mágico en el "Referer" | La página del enlace usa `Referrer-Policy: same-origin`: el enlace nunca se envía a otros sitios. (No `no-referrer`: con esa política el navegador envía el botón con `Origin: null` y nadie podría entrar) | `seguridad`: Origin "null" |
+| El enlace mágico (o el código de activación) en el "Referer" | Sus páginas usan `Referrer-Policy: same-origin`: el enlace nunca se envía a otros sitios. (No `no-referrer`: con esa política el navegador envía el botón con `Origin: null` y nadie podría entrar) | `seguridad`: Origin "null" |
 | Web incrustada en otra (clickjacking) | `frame-ancestors 'none'` y `X-Frame-Options: DENY` | `http`: cabeceras |
 
 ## Revisión independiente (28-09-2026)
@@ -92,6 +95,13 @@ El revisor también confirmó que funcionan bien: enlaces y sesiones (256 bits, 
 12 envíos simultáneos del mismo enlace crearon 1 sola sesión), revocar, separación de sesiones de alumno y de
 admin, CSRF en las 12 rutas POST, sin redirecciones abiertas, sin salir de carpetas, `.env`/`.git`/`storage`
 inaccesibles, errores genéricos en producción, sin XSS, cookies y cabeceras, y SQL con parámetros.
+
+## Enlaces de activación (29-09-2026)
+
+Desde esta fecha el acceso se entrega normalmente con un **enlace de activación** que el dueño envía por
+WhatsApp (sección 2). Riesgo aceptado: quien envíe más de 100 códigos equivocados en una hora frena la
+activación de **todos** hasta que pase esa hora (es el precio de que nadie pueda probar códigos desde muchas
+IP). No da acceso a nada; si pasara, registra la venta con el email del cliente ("Ya tengo su email").
 
 ## Recomendaciones para el dueño
 

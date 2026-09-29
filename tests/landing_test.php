@@ -129,6 +129,8 @@ prueba('las páginas públicas no nombran la web de proveedor (se revela solo de
         $paginas[$legal] = pagina_legal($legal);
     }
     $paginas['reembolsos'] = pagina_reembolsos();
+    $paginas['/activar'] = miembro_activar_formulario();
+    $paginas['/entrar'] = miembro_entrar_formulario();
     foreach ($paginas as $pagina => $respuesta) {
         afirmar(!str_contains(strtolower($respuesta['cuerpo']), $nombre), "$pagina menciona $nombre.");
     }

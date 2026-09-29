@@ -18,7 +18,7 @@ $url = fn (int $p) => '/admin/leads?' . http_build_query(array_filter(['q' => $b
     <select name="estado">
         <option value="">Todos</option>
         <option value="sin-venta"<?= $estado === 'sin-venta' ? ' selected' : '' ?>>Sin venta</option>
-        <option value="con-venta"<?= $estado === 'con-venta' ? ' selected' : '' ?>>Con venta</option>
+        <option value="con-venta"<?= $estado === 'con-venta' ? ' selected' : '' ?>>Con venta o por activar</option>
     </select>
     <button class="boton boton--secundario" type="submit"><?= icono('buscar') ?> Buscar</button>
 </form>

@@ -12,6 +12,19 @@ const HASH_FALSO = '$2y$12$Mj7N5YtirIMEC66Bw9bf5e9eTjWZrY8bouGXeQ/pU.NfHHLXCTaxu
 const LEADS_POR_PAGINA = 50;
 const COOKIE_DISPOSITIVO_ADMIN = 'admin_dispositivo';
 
+// Pagos confirmados: las ventas más los pagos que el cliente todavía no activa (sin los anulados).
+// Para las métricas: el dinero ya lo recibiste, aunque la venta se cree al activar.
+const SQL_PAGOS = 'WITH pagos AS (
+    SELECT lead_id, moneda, monto_centavos, creado_en FROM ventas
+    UNION ALL
+    SELECT lead_id, moneda, monto_centavos, creado_en FROM activaciones WHERE usado_en IS NULL AND anulado_en IS NULL
+) ';
+
+// Clics con su estado: venta_id (vendido) o activacion_id (pagó y falta que active su acceso)
+const SQL_LEADS_CON_ESTADO = 'SELECT l.*, v.id AS venta_id, a.id AS activacion_id FROM leads l
+    LEFT JOIN ventas v ON v.lead_id = l.id
+    LEFT JOIN activaciones a ON a.lead_id = l.id AND a.usado_en IS NULL AND a.anulado_en IS NULL';
+
 function admin_configurado(): bool
 {
     return config('admin.usuario') !== '' && str_starts_with(config('admin.clave_hash'), '$');
@@ -133,11 +146,11 @@ function admin_inicio(): array
     $contar = fn (string $sql, array $p = []) => (int) db_valor($sql, $p);
 
     $leads30 = $contar('SELECT COUNT(*) FROM leads WHERE creado_en >= ?', [$hace30]);
-    $ventasConLead30 = $contar('SELECT COUNT(*) FROM ventas WHERE lead_id IS NOT NULL AND creado_en >= ?', [$hace30]);
+    $ventasConLead30 = $contar(SQL_PAGOS . 'SELECT COUNT(*) FROM pagos WHERE lead_id IS NOT NULL AND creado_en >= ?', [$hace30]);
     $metricas = [
         ['Clics a WhatsApp hoy', $contar('SELECT COUNT(*) FROM leads WHERE creado_en >= ?', [$hoy])],
-        ['Ventas hoy', $contar('SELECT COUNT(*) FROM ventas WHERE creado_en >= ?', [$hoy])],
-        ['Ingresos 30 días', formatear_montos(db_valor("SELECT GROUP_CONCAT(moneda || ':' || monto_centavos) FROM ventas WHERE creado_en >= ?", [$hace30]))],
+        ['Ventas hoy', $contar(SQL_PAGOS . 'SELECT COUNT(*) FROM pagos WHERE creado_en >= ?', [$hoy])],
+        ['Ingresos 30 días', formatear_montos(db_valor(SQL_PAGOS . "SELECT GROUP_CONCAT(moneda || ':' || monto_centavos) FROM pagos WHERE creado_en >= ?", [$hace30]))],
         ['Cierre 30 días', $leads30 > 0 ? round($ventasConLead30 / $leads30 * 100) . '%' : '—'],
     ];
 
@@ -145,15 +158,16 @@ function admin_inicio(): array
         'titulo' => 'Inicio',
         'metricas' => $metricas,
         'leads30' => $leads30,
-        'ventas30' => $contar('SELECT COUNT(*) FROM ventas WHERE creado_en >= ?', [$hace30]),
-        'recientes' => db_filas('SELECT l.*, v.id AS venta_id FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id ORDER BY l.id DESC LIMIT 12'),
+        'ventas30' => $contar(SQL_PAGOS . 'SELECT COUNT(*) FROM pagos WHERE creado_en >= ?', [$hace30]),
+        'recientes' => db_filas(SQL_LEADS_CON_ESTADO . ' ORDER BY l.id DESC LIMIT 12'),
         'anuncios' => db_filas(
-            "SELECT COALESCE(NULLIF(l.utm_campaign, ''), '(sin campaña)') AS campana, COALESCE(l.utm_content, '') AS anuncio,
-                    COUNT(*) AS leads, COUNT(v.id) AS ventas, GROUP_CONCAT(v.moneda || ':' || v.monto_centavos) AS ingresos
-             FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id
+            SQL_PAGOS . "SELECT COALESCE(NULLIF(l.utm_campaign, ''), '(sin campaña)') AS campana, COALESCE(l.utm_content, '') AS anuncio,
+                    COUNT(*) AS leads, COUNT(p.lead_id) AS ventas, GROUP_CONCAT(p.moneda || ':' || p.monto_centavos) AS ingresos
+             FROM leads l LEFT JOIN pagos p ON p.lead_id = l.id
              WHERE l.creado_en >= ? GROUP BY 1, 2 ORDER BY ventas DESC, leads DESC LIMIT 10",
             [$hace30]
         ),
+        'por_activar' => activaciones_pendientes(),
         'pendientes' => lista_de_pendientes(),
     ], 'inicio');
 }
@@ -213,7 +227,7 @@ function admin_leads(): array
     $pagina = max(1, min(1000, (int) ($_GET['p'] ?? 1)));
     [$where, $parametros] = filtros_leads($buscar, $estado);
     $leads = db_filas(
-        "SELECT l.*, v.id AS venta_id FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id $where ORDER BY l.id DESC LIMIT ? OFFSET ?",
+        SQL_LEADS_CON_ESTADO . " $where ORDER BY l.id DESC LIMIT ? OFFSET ?",
         [...$parametros, LEADS_POR_PAGINA + 1, ($pagina - 1) * LEADS_POR_PAGINA]
     );
     return admin_vista('leads', [
@@ -236,16 +250,16 @@ function filtros_leads(string $buscar, string $estado): array
         array_push($parametros, normalizar_codigo($buscar), $like, $like, $like);
     }
     if ($estado === 'sin-venta') {
-        $condiciones[] = 'v.id IS NULL';
+        $condiciones[] = 'v.id IS NULL AND a.id IS NULL';
     } elseif ($estado === 'con-venta') {
-        $condiciones[] = 'v.id IS NOT NULL';
+        $condiciones[] = '(v.id IS NOT NULL OR a.id IS NOT NULL)'; // incluye los pagos por activar
     }
     return [$condiciones ? 'WHERE ' . implode(' AND ', $condiciones) : '', $parametros];
 }
 
 /* ---------- Ventas ---------- */
 
-function admin_ventas(): array
+function admin_ventas(string $mensaje = ''): array
 {
     if ($r = admin_requerido()) {
         return $r;
@@ -264,6 +278,8 @@ function admin_ventas(): array
         'ventas' => array_slice($ventas, 0, LEADS_POR_PAGINA),
         'hay_mas' => count($ventas) > LEADS_POR_PAGINA,
         'pagina' => $pagina,
+        'por_activar' => $pagina === 1 ? activaciones_pendientes() : [],
+        'mensaje' => $mensaje,
     ], 'ventas');
 }
 
@@ -281,6 +297,7 @@ function admin_venta_formulario(): array
         'codigo' => $codigo,
         'monto' => $lead ? rtrim(rtrim(number_format(precio_actual($negocio), 2, '.', ''), '0'), '.') : '',
         'moneda' => $lead ? $negocio['moneda'] : 'AUTO',
+        'entrega' => 'activacion',
         'enviar_email' => true,
     ], []);
 }
@@ -311,12 +328,79 @@ function admin_venta_registrar(): array
     if ($errores) {
         return admin_vista_formulario_venta($datos, $errores);
     }
+    // El mismo formulario enviado otra vez (doble toque, recargar, volver atrás y cambiar la opción)
+    // no registra nada nuevo: se muestra lo que ya se había registrado con él.
+    $activacion = activacion_por_clave($datos['clave_formulario']);
+    if ($activacion === null && $datos['entrega'] === 'activacion' && venta_por_clave($datos['clave_formulario']) === null) {
+        $resultado = activacion_crear($datos);
+        registrar('ventas', $resultado['repetida'] ? 'Pago repetido (no se duplicó)' : 'Pago registrado: falta que el cliente lo active', [
+            'activacion' => $resultado['activacion']['id'],
+        ]);
+        return admin_vista_activacion($resultado);
+    }
+    if ($activacion !== null) {
+        return admin_vista_activacion(activacion_ya_creada($activacion));
+    }
     $resultado = venta_registrar($datos);
     registrar('ventas', $resultado['repetida'] ? 'Venta repetida (no se duplicó)' : 'Venta registrada', [
         'venta' => $resultado['venta']['id'],
         'email' => $resultado['comprador']['email'],
     ]);
     return admin_vista('venta_resultado', ['titulo' => 'Venta registrada', 'resultado' => $resultado], 'ventas');
+}
+
+function admin_vista_activacion(array $resultado, bool $enlaceNuevo = false): array
+{
+    $activacion = $resultado['activacion'];
+    $venta = $activacion['venta_id'] !== null ? db_fila('SELECT * FROM ventas WHERE id = ?', [$activacion['venta_id']]) : null;
+    return admin_vista('activacion_resultado', [
+        'titulo' => $enlaceNuevo ? 'Enlace nuevo' : 'Pago registrado',
+        'resultado' => $resultado,
+        'enlace_nuevo' => $enlaceNuevo,
+        'comprador' => $venta !== null ? comprador_por_id((int) $venta['comprador_id']) : null,
+        'clic' => $activacion['lead_id'] !== null ? db_fila('SELECT * FROM leads WHERE id = ?', [$activacion['lead_id']]) : null,
+    ], 'ventas');
+}
+
+/* ---------- Pagos por activar ---------- */
+
+/** Nuevo enlace (el cliente perdió el suyo o se le venció) o anular el pago (devolución, error). */
+function admin_activacion_accion(string $id, string $accion): array
+{
+    if ($r = admin_requerido()) {
+        return $r;
+    }
+    if ($rechazo = rechazar_si_no_legitimo()) {
+        return $rechazo;
+    }
+    $activacion = ($numero = id_de_ruta($id)) !== null ? activacion_por_id($numero) : null;
+    if ($activacion === null) {
+        return pagina_error(404, 'No encontrado', 'Ese pago no existe.');
+    }
+    $aid = (int) $activacion['id'];
+    if ($accion === 'enlace') {
+        $resultado = activacion_nuevo_codigo($aid);
+        if ($resultado === null) {
+            return admin_ventas("El pago #$aid ya se activó o se anuló: no se le puede crear otro enlace.");
+        }
+        registrar('ventas', 'Nuevo enlace de activación', ['activacion' => $aid]);
+        return admin_vista_activacion($resultado, true);
+    }
+    if (!activacion_anular($aid)) {
+        return admin_ventas("El pago #$aid ya se había activado o anulado.");
+    }
+    registrar('ventas', 'Pago por activar anulado', ['activacion' => $aid]);
+    return admin_ventas("Pago #$aid anulado: su enlace ya no sirve y no cuenta en tus ingresos.");
+}
+
+function admin_activacion_enlace(string $id): array
+{
+    return admin_activacion_accion($id, 'enlace');
+}
+
+function admin_activacion_anular(string $id): array
+{
+    return admin_activacion_accion($id, 'anular');
 }
 
 /* ---------- Compradores ---------- */
@@ -539,8 +623,10 @@ function admin_exportar(string $tipo): array
                         v.metodo_pago, v.referencia_pago, l.codigo, l.pais, l.utm_source, l.utm_campaign, l.utm_content
                     FROM ventas v JOIN compradores c ON c.id = v.comprador_id LEFT JOIN leads l ON l.id = v.lead_id ORDER BY v.id',
         'leads' => 'SELECT l.id, l.creado_en AS fecha, l.codigo, l.pais, l.boton, l.clics, l.utm_source, l.utm_medium, l.utm_campaign,
-                        l.utm_content, l.utm_term, CASE WHEN v.id IS NULL THEN \'no\' ELSE \'sí\' END AS vendido
-                    FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id ORDER BY l.id',
+                        l.utm_content, l.utm_term,
+                        CASE WHEN v.id IS NOT NULL THEN \'sí\' WHEN a.id IS NOT NULL THEN \'por activar\' ELSE \'no\' END AS vendido
+                    FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id
+                    LEFT JOIN activaciones a ON a.lead_id = l.id AND a.usado_en IS NULL AND a.anulado_en IS NULL ORDER BY l.id',
         'compradores' => 'SELECT c.id, c.creado_en AS fecha, c.nombre, c.email, c.whatsapp, c.notas,
                         CASE WHEN a.id IS NULL OR a.revocado_en IS NOT NULL THEN \'no\' ELSE \'sí\' END AS acceso
                     FROM compradores c LEFT JOIN accesos a ON a.comprador_id = c.id AND a.producto = \'curso\' ORDER BY c.id',

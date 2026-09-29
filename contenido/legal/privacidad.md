@@ -29,7 +29,7 @@ No recibimos datos de tarjetas: los pagos se hacen fuera del sitio, con la plata
 
 ## Para qué usamos tus datos
 
-1. **Venderte y entregarte el curso:** atender tu consulta, confirmar tu pago, crear tu acceso y enviarte el enlace de acceso por email y, a veces, por WhatsApp.
+1. **Venderte y entregarte el curso:** atender tu consulta, confirmar tu pago, crear tu acceso y enviarte tus enlaces de acceso por WhatsApp o por email.
 2. **Darte soporte:** responder tus preguntas y solicitudes, incluidas las de reembolso.
 3. **Seguridad y prevención de abusos:** por ejemplo, limitar cuántos intentos o solicitudes se pueden hacer en poco tiempo y controlar las sesiones abiertas.
 4. **Medir y mejorar nuestros anuncios:** saber qué anuncios traen visitas, consultas y ventas (ver "Medición de anuncios con Meta").

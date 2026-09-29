@@ -17,8 +17,9 @@ Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso 
 1. Anuncio → **landing** del país (`/ec`, `/mx`), cuyo único trabajo es convencer. Se guardan los UTM y el fbclid.
 2. El visitante toca el botón → `/wa` crea un **lead** con un código corto (ej. `K7Q2`) y lo manda a WhatsApp con un mensaje ya escrito que incluye ese código.
 3. El dueño cierra y cobra **por WhatsApp** (transferencia bancaria, PayPal, Binance/USDT).
-4. En el **panel admin** registra la venta (código + nombre + email + WhatsApp + monto) → se crea el acceso, se envía el email (Resend) y el evento **Purchase** a Meta (API de Conversiones) con los datos del clic original.
-5. El comprador entra al **área de miembros** con un enlace mágico, sin contraseña.
+4. En el **panel admin** registra el pago (código del clic + monto) → le da un **enlace de activación** (`/activar/K7Q2-M8XP`) con un mensaje listo y el botón "Enviar por WhatsApp".
+5. El cliente abre el enlace, escribe su nombre y su email y entra al **área de miembros**. En ese momento se crean el comprador, la venta y su acceso, le llega el email de bienvenida (Resend) y va el **Purchase** a Meta (API de Conversiones) con los datos del clic original. Para volver a entrar, enlace mágico por email, sin contraseña.
+   - Alternativa en el mismo formulario: "Ya tengo su email" → se crea el acceso al instante y le llega por email.
 
 ## Decisiones y motivos
 
@@ -30,15 +31,16 @@ Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso 
 | Base de datos | **SQLite** (`storage/base.sqlite`) | Sin configuración, igual en local y en producción, poco volumen. Copia diaria por cron (fase 7). |
 | Emails | **Resend** (API HTTP con curl) | Llega mejor que el SMTP compartido. Gratis: 100/día y 3.000/mes. |
 | Videos | **YouTube (oculto) o Google Drive** | El dueño quiere que sus usuarios de smmclixy también los vean, así que los videos NO son exclusivos. La protección se centra en el área de miembros y los descargables. Preferir YouTube: Drive corta la reproducción de los archivos muy vistos. |
+| Entrega del acceso | **Web + WhatsApp**: enlace de activación (`app/lib/activaciones.php`, tabla `activaciones`). Código de 8 caracteres (solo su hash en la base), un solo uso, vence en 30 días; "Enlace nuevo" anula el anterior y "Anular" lo quita de los ingresos. La venta se crea al activar, con la fecha del pago. Si el email ya es de un comprador, no se abre su sesión: la compra se le suma y el enlace llega a su correo | Decisión del dueño: cierra por WhatsApp y así no tiene que pedir el email. El cliente escribe él mismo sus datos. Los pagos "por activar" ya cuentan en ventas, ingresos y cierre del panel. |
 | Acceso de miembros | Enlace mágico por email, de un solo uso y confirmado con un botón (POST); sesión de 90 días; máximo 3 dispositivos | Sin contraseñas que olvidar. El botón evita que los antivirus del correo "gasten" el enlace al escanearlo. El admin puede copiar el enlace y mandarlo también por WhatsApp. |
 | Garantía | **Sin garantía de satisfacción** (`garantia_dias = 0`): la landing no la menciona y `/reembolsos` muestra `reembolsos-sin-garantia.md`, que cubre solo lo que exige la ley: devolución si pide dentro de 15 días y **no ha entrado** al curso (art. 45 de la Ley Orgánica de Defensa del Consumidor, reformado), problemas de acceso nuestros y cobros de más. `compradores.primer_ingreso_en` guarda cuándo entró por primera vez (se ve en su ficha del panel) | Decisión del dueño. Un "no hay devoluciones" absoluto no vale ante la ley (no se puede renunciar a los derechos del consumidor). **Pendiente de validar con un abogado.** Con `garantia_dias > 0` vuelve la política con garantía (`reembolsos.md`). |
 | Países | `/ec` y `/mx` (lista en `contenido/negocio.php` → `paises`; ruta `/{pais}` al final de `app/rutas.php`). Mismo contenido; cada una usa sus capturas (`ingresos-ec-*`, `ingresos-mx-*`; si no tiene, las generales) y, si se indica, su precio y moneda. El botón lleva el país (`/wa?b=hero&p=mx`), el clic lo guarda (`leads.pais`) y la venta se registra en su moneda (automático según el clic, o a mano). Totales del panel por moneda; el Purchase va a Meta con la moneda de la venta. `/` es la versión general (dólares, capturas de todos) | Anuncios separados por país. En México "$" se lee como pesos: ahí se muestra y se cobra en MXN ("$200 MXN"). |
 | Precio | $15 tachado → $10 con fecha de fin **real** (`contenido/negocio.php`). México: $300 → $200 MXN, misma fecha de fin. Etiqueta junto al precio en `contenido/landing.php` (`promo.etiqueta`: "Ahorra {ahorro}") | Un precio anterior ficticio es publicidad engañosa (Ley Orgánica de Defensa del Consumidor, art. 7). Al vencer la fecha, la web muestra $15 sola. Nada de contadores falsos. |
-| Medición | Pixel (PageView, Contact) + API de Conversiones (Contact con el mismo `event_id`; Purchase al registrar la venta) | Meta aprende de las ventas reales, aunque se cierren por WhatsApp. |
+| Medición | Pixel (PageView, Contact) + API de Conversiones (Contact con el mismo `event_id`; Purchase al crearse la venta: al activar el enlace, o al registrarla con email) | Meta aprende de las ventas reales, aunque se cierren por WhatsApp. Al activar ya tenemos su email. |
 | Purchase | `action_source=website` si la venta trae código (con URL, IP, navegador y fbc/fbp del clic); `chat` si no | Meta solo acepta eventos web con datos del navegador; sin clic de origen, la venta fue por chat. Graph API `v25.0` (configurable con `META_GRAPH_VERSION`). |
 | Privacidad | Medición por **interés legítimo** con aviso en el pie y derecho de oposición (no hay banner de cookies) | Menos fricción en la landing. **Pendiente de validar con un abogado** si algún país exige consentimiento previo. |
 | Emails sin clave | Sin `RESEND_API_KEY` los emails quedan "simulados" (log + panel) | Se puede probar todo en local; el panel muestra el enlace para enviarlo por WhatsApp. En producción el log no guarda el enlace. |
-| Límites | Panel: 5 intentos/15 min por IP (IPv6 por /64), sin contador global; el dispositivo donde el dueño ya entró (cookie `admin_dispositivo`, firmada con `CLAVE_APP`) tiene su propio contador. `/entrar`: 3 por email cada 15 min, 6 por email al día, 10 por IP cada 15 min y 60 emails al día en total. `/wa`: 30 leads nuevos por hora por IP | Que nadie pueda dejar al dueño fuera del panel ni gastar el cupo de Resend (100/día) que necesitan los emails de compra. Ver `SEGURIDAD.md`. |
+| Límites | Panel: 5 intentos/15 min por IP (IPv6 por /64), sin contador global; el dispositivo donde el dueño ya entró (cookie `admin_dispositivo`, firmada con `CLAVE_APP`) tiene su propio contador. `/entrar`: 3 por email cada 15 min, 6 por email al día, 10 por IP cada 15 min y 60 emails al día en total. `/wa`: 30 leads nuevos por hora por IP. `/activar`: 10 intentos por IP cada 15 min y 100 códigos equivocados por hora entre todos | Que nadie pueda dejar al dueño fuera del panel ni gastar el cupo de Resend (100/día) que necesitan los emails de compra. Ver `SEGURIDAD.md`. |
 
 ## Estructura
 
@@ -51,10 +53,10 @@ app/                 código PHP (no accesible desde la web)
                      contenido, negocio (precio/promo), texto (variables, Markdown), iconos, imagenes (capturas),
                      visitas (IP, bots, UTM), limites, leads (código WhatsApp), cliente_http, meta (Pixel/CAPI),
                      seguridad (tokens, sesiones, CSRF), accesos (compradores, enlaces mágicos), emails (Resend),
-                     ventas, curso, mantenimiento (limpieza y respaldos)
+                     ventas, activaciones (enlaces de activación), curso, mantenimiento (limpieza y respaldos)
   paginas/           publico.php (landing, /wa, legales), miembros.php, admin.php
   vistas/            layouts (landing, admin, miembros, general), admin/, miembros/, emails/, parciales/
-  migraciones/       001_inicial.sql, 002_progreso.sql, 003_primer_ingreso.sql, 004_pais_de_los_leads.sql…
+  migraciones/       001_inicial.sql, 002_progreso.sql, 003_primer_ingreso.sql, 004_pais_de_los_leads.sql, 005_activaciones.sql…
 bin/                 instalar.php, crear-admin.php, desbloquear-panel.php, optimizar-capturas.php, tareas.php (cron)
 contenido/           lo que edita el dueño:
   negocio.php        nombre, precios, promo, garantía, WhatsApp, métodos de pago, smmclixy, datos legales
@@ -70,8 +72,8 @@ DESPLIEGUE.md        guía paso a paso para Hostinger
 SEGURIDAD.md         revisión de seguridad
 ```
 
-Rutas: `/` landing general · `/ec`, `/mx` landing por país · `/wa` botón de WhatsApp · `/terminos` `/privacidad` `/reembolsos` · `/entrar`, `/acceso/{token}`,
-`/miembros…` área de miembros · `/admin…` panel (ver `app/rutas.php`).
+Rutas: `/` landing general · `/ec`, `/mx` landing por país · `/wa` botón de WhatsApp · `/terminos` `/privacidad` `/reembolsos` · `/activar`, `/activar/{codigo}` ·
+`/entrar`, `/acceso/{token}`, `/miembros…` área de miembros · `/admin…` panel (ver `app/rutas.php`).
 
 **Producción:** el repo se clona en `/home/uXXXX/domains/DOMINIO/`. Así la carpeta `public_html/` del repo **es** la raíz web de Hostinger, y el código, el `.env` y la base de datos quedan fuera del alcance de internet. Para actualizar basta con `git pull` + `php bin/instalar.php`. En Hostinger no se puede cambiar la raíz web, por eso la carpeta pública se llama `public_html`.
 

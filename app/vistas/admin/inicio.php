@@ -6,6 +6,7 @@
  * @var int   $ventas30
  * @var array $recientes
  * @var array $anuncios
+ * @var array $por_activar  pagos que el cliente todavía no activa
  * @var array $pendientes
  */
 ?>
@@ -31,6 +32,10 @@
         </div>
     <?php endforeach; ?>
 </div>
+
+<?php if ($por_activar): ?>
+    <?= plantilla('admin/_activaciones', ['activaciones' => $por_activar]) ?>
+<?php endif; ?>
 
 <section class="tarjeta">
     <div class="cabecera-tarjeta">

@@ -140,7 +140,7 @@ META_PIXEL_ID=123456789012345
 META_CAPI_TOKEN=EAAB...
 ```
 
-4. **Probar:** en el Administrador de eventos → **Probar eventos** → copia el código (ej. `TEST12345`) y ponlo en `META_TEST_EVENT_CODE`. Abre tu web, toca el botón de WhatsApp y registra una venta de prueba: deberían aparecer **PageView**, **Contact** (navegador y servidor, deduplicados) y **Purchase** (servidor).
+4. **Probar:** en el Administrador de eventos → **Probar eventos** → copia el código (ej. `TEST12345`) y ponlo en `META_TEST_EVENT_CODE`. Abre tu web, toca el botón de WhatsApp, registra una venta de prueba y actívala con su enlace: deberían aparecer **PageView**, **Contact** (navegador y servidor, deduplicados) y **Purchase** (servidor, al activar).
 5. Cuando termines de probar, **borra** `META_TEST_EVENT_CODE` del `.env` (el panel te lo recuerda).
 
 **En tus anuncios**, pon esto en **Seguimiento → Parámetros de URL** para que el panel te diga qué anuncio vende:
@@ -185,7 +185,7 @@ nano storage/curso/curso.php        # módulos, lecciones y enlaces de YouTube/D
 - [ ] `https://tudominio.com` carga con candado (https) y rápido en el celular.
 - [ ] `https://tudominio.com/.env` y `https://tudominio.com/storage/base.sqlite` **no** muestran nada (403 o 404).
 - [ ] El botón de WhatsApp abre tu chat con el mensaje y el código.
-- [ ] En el panel ves el clic; registras una venta de prueba con ese código; te llega el email; el enlace abre el curso.
+- [ ] En el panel ves el clic; registras una venta de prueba con ese código ("Con un enlace de activación"); tocas "Enviar por WhatsApp", te mandas el mensaje a ti mismo, abres el enlace, escribes tu nombre y tu email y entras al curso; te llega el email de bienvenida.
 - [ ] En Meta ves Contact y Purchase (con el código de prueba).
 - [ ] Revocas la venta de prueba (ficha del comprador → Revocar acceso).
 - [ ] El cron aparece como ejecutado en hPanel y existe `storage/respaldos/base-FECHA.sqlite`.

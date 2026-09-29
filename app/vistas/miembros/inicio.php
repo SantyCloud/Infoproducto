@@ -6,10 +6,18 @@
  * @var array      $vistas     [slug => true]
  * @var array|null $siguiente  primera lección sin ver
  * @var array      $panel      contenido/negocio.php → smmclixy
+ * @var bool       $bienvenida recién activó su acceso
  */
 $total = count($curso['lista']);
 $porcentaje = $total > 0 ? (int) round(count($vistas) / $total * 100) : 0;
 ?>
+<?php if (!empty($bienvenida)): ?>
+    <div class="aviso aviso--ok" role="status">
+        <strong>¡Listo, tu acceso está activado!</strong> Para entrar desde otro celular o computadora, pide tu enlace en
+        <strong><?= e(preg_replace('#^https?://#', '', config('app.url'))) ?>/entrar</strong> con tu email <strong><?= e($comprador['email']) ?></strong>.
+        También te lo enviamos a tu correo.
+    </div>
+<?php endif; ?>
 <section class="bienvenida">
     <h1>Hola, <?= e(primer_nombre((string) $comprador['nombre'])) ?> 👋</h1>
     <p><?= $porcentaje === 0 ? 'Empieza por la primera lección. Videos cortos y al grano.' : "Llevas el $porcentaje% del curso. ¡Sigue así!" ?></p>

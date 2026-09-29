@@ -51,6 +51,9 @@ return [
         'mensaje' => 'Hola 👋 Quiero el {producto} a {precio}.',
         // Se añade al final del mensaje. {codigo} es lo que te dice qué anuncio trajo la venta.
         'texto_codigo' => 'Mi código: {codigo}',
+        // Mensaje con el que le envías al cliente su enlace de activación, después de cobrar
+        // (el panel lo deja listo al registrar la venta). {enlace} = su enlace · {codigo} = su código · \n = salto de línea.
+        'mensaje_activacion' => "¡Gracias por tu compra! 🎉\n\nActiva tu acceso a {producto} aquí:\n{enlace}\n\nSolo te pedirá tu nombre y tu email. Si el enlace no abre, entra a {sitio}/activar y escribe el código {codigo}.",
     ],
 
     // Métodos de pago que aceptas (se muestran en la web para dar confianza)

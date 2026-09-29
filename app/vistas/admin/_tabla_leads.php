@@ -23,6 +23,8 @@
                     <td>
                         <?php if ($lead['venta_id']): ?>
                             <span class="estado estado--ok">Vendido</span>
+                        <?php elseif (!empty($lead['activacion_id'])): ?>
+                            <span class="estado estado--alerta">Pagó · por activar</span>
                         <?php else: ?>
                             <a class="boton boton--chico boton--secundario" href="/admin/ventas/nueva?codigo=<?= e(rawurlencode($lead['codigo'])) ?>">Registrar venta</a>
                         <?php endif; ?>
