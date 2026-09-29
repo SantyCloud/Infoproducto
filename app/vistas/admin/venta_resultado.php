@@ -10,7 +10,7 @@ $email = $resultado['email'];
 <?php if ($resultado['repetida']): ?>
     <div class="aviso aviso--alerta">Esta venta ya estaba registrada (#<?= (int) $venta['id'] ?>): no se duplicó nada.</div>
 <?php else: ?>
-    <div class="aviso aviso--ok"><?= icono('check') ?> Venta #<?= (int) $venta['id'] ?> registrada: <?= e(formatear_centavos($venta['monto_centavos'])) ?>. <?= e($comprador['nombre']) ?> ya tiene acceso.</div>
+    <div class="aviso aviso--ok"><?= icono('check') ?> Venta #<?= (int) $venta['id'] ?> registrada: <?= e(formatear_centavos($venta['monto_centavos'], $venta['moneda'])) ?>. <?= e($comprador['nombre']) ?> ya tiene acceso.</div>
 <?php endif; ?>
 
 <div class="tarjeta">

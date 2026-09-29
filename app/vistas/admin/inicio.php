@@ -49,7 +49,7 @@
                         <td><?= (int) $fila['leads'] ?></td>
                         <td><strong><?= (int) $fila['ventas'] ?></strong></td>
                         <td><?= $fila['leads'] > 0 ? round($fila['ventas'] / $fila['leads'] * 100) . '%' : '—' ?></td>
-                        <td><?= e(formatear_centavos($fila['ingresos'])) ?></td>
+                        <td><?= e(formatear_montos($fila['ingresos'])) ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>

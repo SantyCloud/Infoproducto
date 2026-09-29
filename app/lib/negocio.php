@@ -51,11 +51,71 @@ function ahorro_promo(?array $negocio = null, ?DateTimeImmutable $momento = null
     return max(0.0, round((float) $negocio['precio_normal'] - precio_actual($negocio, $momento), 2));
 }
 
-/** 10 → "$10" · 12.5 → "$12.50" */
-function formatear_precio(float|int $monto): string
+/** 10 → "$10" · 12.5 → "$12.50" · en otra moneda: 200 → "$200 MXN" */
+function formatear_precio(float|int $monto, string $moneda = 'USD'): string
 {
     $decimales = floor($monto) == $monto ? 0 : 2;
-    return '$' . number_format($monto, $decimales, '.', ',');
+    $texto = '$' . number_format($monto, $decimales, '.', ',');
+    return $moneda === 'USD' ? $texto : "$texto $moneda";
+}
+
+/** El precio para mostrarlo en grande: el código de la moneda (MXN) va aparte, en pequeño. */
+function precio_html(float|int $monto, string $moneda = 'USD'): string
+{
+    $html = e(formatear_precio($monto));
+    return $moneda === 'USD' ? $html : $html . '<span class="moneda">' . e($moneda) . '</span>';
+}
+
+/* ---------- Países ---------- */
+
+/** Países con página propia (contenido/negocio.php → paises): ['mx' => ['nombre' => 'México', …]]. */
+function paises(?array $negocio = null): array
+{
+    $negocio ??= contenido('negocio');
+    return is_array($negocio['paises'] ?? null) ? $negocio['paises'] : [];
+}
+
+/** El código si ese país tiene página propia ("MX" → "mx"); si no, null. */
+function pais_valido(mixed $codigo): ?string
+{
+    $codigo = strtolower(texto_de($codigo));
+    return $codigo !== '' && isset(paises()[$codigo]) ? $codigo : null;
+}
+
+/**
+ * Los datos del negocio con los precios y la moneda de un país ($pais = null: los generales, en dólares).
+ * Añade 'pais' y 'moneda'.
+ */
+function negocio_de_pais(?string $pais, ?array $negocio = null): array
+{
+    $negocio ??= contenido('negocio');
+    $datos = $pais !== null ? (paises($negocio)[$pais] ?? null) : null;
+    $negocio['pais'] = is_array($datos) ? $pais : null;
+    $negocio['moneda'] = 'USD';
+    if (!is_array($datos)) {
+        return $negocio;
+    }
+    $negocio['moneda'] = (string) ($datos['moneda'] ?? 'USD');
+    if (isset($datos['precio_normal'])) {
+        $negocio['precio_normal'] = $datos['precio_normal'];
+    }
+    if (isset($datos['precio_promo'])) {
+        $negocio['promo']['precio'] = $datos['precio_promo'];
+    }
+    if (isset($datos['metodos_pago'])) {
+        $negocio['metodos_pago'] = $datos['metodos_pago'];
+    }
+    return $negocio;
+}
+
+/** Monedas en las que se registran ventas: dólares y las de los países. */
+function monedas(): array
+{
+    $monedas = ['USD'];
+    foreach (paises() as $datos) {
+        $monedas[] = (string) ($datos['moneda'] ?? 'USD');
+    }
+    return array_values(array_unique($monedas));
 }
 
 /**

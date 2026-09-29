@@ -81,7 +81,7 @@ $estadoEmail = ['enviado' => 'ok', 'simulado' => 'alerta', 'error' => 'error'];
                     <tr>
                         <td><?= (int) $venta['id'] ?></td>
                         <td><?= e(fecha_local($venta['creado_en'])) ?></td>
-                        <td><?= e(formatear_centavos($venta['monto_centavos'])) ?></td>
+                        <td><?= e(formatear_centavos($venta['monto_centavos'], $venta['moneda'])) ?></td>
                         <td><?= e($venta['metodo_pago'] ?: '—') ?><?= $venta['referencia_pago'] ? '<br><small class="suave">' . e($venta['referencia_pago']) . '</small>' : '' ?></td>
                         <td class="codigo"><?= e($venta['codigo'] ?: '—') ?></td>
                         <td class="envolver"><?= e($venta['utm_campaign'] ?: '—') ?></td>

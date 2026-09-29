@@ -41,7 +41,7 @@ La compra **no** incluye:
 
 ## Precios y promociones
 
-- Los precios se muestran en el sitio en dólares estadounidenses (USD).
+- Los precios se muestran en dólares estadounidenses (USD), salvo en las páginas para un país que indiquen otra moneda (por ejemplo, pesos mexicanos, MXN, en la página para México). Pagas en la moneda que indica la página por la que llegaste.
 - Puede haber una promoción de lanzamiento. Si la hay, el sitio muestra la fecha real en que termina y, desde ese momento, se aplica el precio normal.
 - El precio válido es el que el sitio muestra en el momento en que nos escribes por WhatsApp para comprar.
 

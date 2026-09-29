@@ -59,6 +59,37 @@ function capturas(string $prefijo): array
     return array_values($lista);
 }
 
+/**
+ * Capturas para la página de un país: si hay capturas de ese país (ingresos-mx-1…) se usan esas;
+ * si no, las generales (ingresos-1…). Sin país (página general) se muestran todas.
+ */
+function capturas_de_pais(string $prefijo, ?string $pais): array
+{
+    return elegir_capturas_de_pais(capturas($prefijo), $prefijo, $pais, array_keys(paises()));
+}
+
+/** La elección de capturas_de_pais(), separada para poder probarla. $codigos: todos los países configurados. */
+function elegir_capturas_de_pais(array $todas, string $prefijo, ?string $pais, array $codigos): array
+{
+    if ($pais === null) {
+        return $todas;
+    }
+    $delPais = fn (array $captura, string $codigo): bool => str_starts_with($captura['nombre'], "$prefijo-$codigo-")
+        || $captura['nombre'] === "$prefijo-$codigo";
+    $propias = array_values(array_filter($todas, fn (array $c) => $delPais($c, $pais)));
+    if ($propias) {
+        return $propias;
+    }
+    return array_values(array_filter($todas, function (array $c) use ($codigos, $delPais): bool {
+        foreach ($codigos as $codigo) {
+            if ($delPais($c, $codigo)) {
+                return false; // es de otro país
+            }
+        }
+        return true;
+    }));
+}
+
 /** ¿Este servidor puede crear imágenes WebP? Si no, se usa JPEG. */
 function formato_capturas(): string
 {

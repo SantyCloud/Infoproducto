@@ -5,11 +5,19 @@ declare(strict_types=1);
  * Páginas públicas (no necesitan sesión): landing, botón de WhatsApp y páginas legales.
  */
 
-/** Landing de venta. */
-function pagina_inicio(): array
+/** Landing de venta: la general (sin país) o la de un país, con sus precios, moneda y capturas. */
+function pagina_inicio(?string $pais = null): array
 {
-    $respuesta = html(vista('landing', datos_landing(contenido('negocio'), contenido('landing')), 'layout_landing'));
+    $datos = datos_landing(negocio_de_pais($pais), contenido('landing'));
+    $respuesta = html(vista('landing', $datos, 'layout_landing'));
     return con_cookies_de_visita($respuesta, $_GET, $_COOKIE, url_actual());
+}
+
+/** tudominio.com/mx, /ec…: la landing del país, si está en contenido/negocio.php. */
+function pagina_pais(string $pais): array
+{
+    $codigo = pais_valido($pais);
+    return $codigo === null ? pagina_error(404, 'Página no encontrada', 'La página que buscas no existe.') : pagina_inicio($codigo);
 }
 
 /** Todo lo que necesita la plantilla de la landing (separado para poder probarla con otros datos). */
@@ -17,6 +25,8 @@ function datos_landing(array $negocio, array $crudo): array
 {
     $garantia = (int) ($negocio['garantia_dias'] ?? 0) > 0;
     $landing = textos($garantia ? $crudo : sin_menciones_de_garantia($crudo), variables_texto($negocio));
+    $pais = $negocio['pais'] ?? null;
+    $moneda = (string) ($negocio['moneda'] ?? 'USD');
 
     return [
         'titulo' => $landing['seo']['titulo'],
@@ -26,15 +36,18 @@ function datos_landing(array $negocio, array $crudo): array
         'l' => $landing,
         'negocio' => $negocio,
         'promo' => promo_vigente($negocio),
-        'precio' => formatear_precio(precio_actual($negocio)),
-        'precio_normal' => formatear_precio($negocio['precio_normal']),
+        'pais' => $pais,
+        'precio' => formatear_precio(precio_actual($negocio), $moneda),
+        'precio_normal' => formatear_precio($negocio['precio_normal'], $moneda),
+        'precio_html' => precio_html(precio_actual($negocio), $moneda),
+        'precio_normal_corto' => formatear_precio($negocio['precio_normal']),
         'tiempo_promo' => texto_tiempo_promo($negocio),
         'descuento' => porcentaje_descuento($negocio),
         'garantia' => $garantia,
         'capturas' => [
-            'demanda' => capturas($landing['demanda']['capturas'] ?? 'mensajes'),
-            'resultados' => capturas($landing['resultados']['capturas'] ?? 'ingresos'),
-            'testimonios' => capturas($landing['testimonios']['capturas'] ?? 'testimonio'),
+            'demanda' => capturas_de_pais($landing['demanda']['capturas'] ?? 'mensajes', $pais),
+            'resultados' => capturas_de_pais($landing['resultados']['capturas'] ?? 'ingresos', $pais),
+            'testimonios' => capturas_de_pais($landing['testimonios']['capturas'] ?? 'testimonio', $pais),
         ],
         'mostrar_huecos' => !es_produccion(),
     ];
@@ -59,7 +72,7 @@ function pagina_whatsapp(): array
         meta_contact_para_lead($lead);
     }
 
-    $respuesta = redireccion(enlace_whatsapp($lead['codigo'] ?? null));
+    $respuesta = redireccion(enlace_whatsapp($lead['codigo'] ?? null, negocio_de_pais($visita['pais'])));
     $respuesta['cabeceras']['Cache-Control'] = 'no-store';
     $respuesta['cabeceras']['X-Robots-Tag'] = 'noindex';
     if ($lead !== null && !visitante_valido($_COOKIE['vis'] ?? null)) {

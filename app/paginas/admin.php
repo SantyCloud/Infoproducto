@@ -137,7 +137,7 @@ function admin_inicio(): array
     $metricas = [
         ['Clics a WhatsApp hoy', $contar('SELECT COUNT(*) FROM leads WHERE creado_en >= ?', [$hoy])],
         ['Ventas hoy', $contar('SELECT COUNT(*) FROM ventas WHERE creado_en >= ?', [$hoy])],
-        ['Ingresos 30 días', formatear_centavos(db_valor('SELECT SUM(monto_centavos) FROM ventas WHERE creado_en >= ?', [$hace30]))],
+        ['Ingresos 30 días', formatear_montos(db_valor("SELECT GROUP_CONCAT(moneda || ':' || monto_centavos) FROM ventas WHERE creado_en >= ?", [$hace30]))],
         ['Cierre 30 días', $leads30 > 0 ? round($ventasConLead30 / $leads30 * 100) . '%' : '—'],
     ];
 
@@ -149,7 +149,7 @@ function admin_inicio(): array
         'recientes' => db_filas('SELECT l.*, v.id AS venta_id FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id ORDER BY l.id DESC LIMIT 12'),
         'anuncios' => db_filas(
             "SELECT COALESCE(NULLIF(l.utm_campaign, ''), '(sin campaña)') AS campana, COALESCE(l.utm_content, '') AS anuncio,
-                    COUNT(*) AS leads, COUNT(v.id) AS ventas, COALESCE(SUM(v.monto_centavos), 0) AS ingresos
+                    COUNT(*) AS leads, COUNT(v.id) AS ventas, GROUP_CONCAT(v.moneda || ':' || v.monto_centavos) AS ingresos
              FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id
              WHERE l.creado_en >= ? GROUP BY 1, 2 ORDER BY ventas DESC, leads DESC LIMIT 10",
             [$hace30]
@@ -273,9 +273,14 @@ function admin_venta_formulario(): array
         return $r;
     }
     $codigo = normalizar_codigo(texto_de($_GET['codigo'] ?? null));
+    $lead = $codigo !== '' ? db_fila('SELECT * FROM leads WHERE codigo = ?', [$codigo]) : null;
+    // Desde un clic: el precio y la moneda de su página. Sin clic, el monto queda vacío a propósito
+    // (con la moneda en automático, un "10" de otro país se registraría mal).
+    $negocio = negocio_de_pais($lead['pais'] ?? null);
     return admin_vista_formulario_venta([
         'codigo' => $codigo,
-        'monto' => rtrim(rtrim(number_format(precio_actual(), 2, '.', ''), '0'), '.'),
+        'monto' => $lead ? rtrim(rtrim(number_format(precio_actual($negocio), 2, '.', ''), '0'), '.') : '',
+        'moneda' => $lead ? $negocio['moneda'] : 'AUTO',
         'enviar_email' => true,
     ], []);
 }
@@ -289,6 +294,7 @@ function admin_vista_formulario_venta(array $valores, array $errores): array
         'errores' => $errores,
         'lead' => $lead,
         'metodos' => metodos_de_pago(),
+        'monedas' => monedas(),
         'clave_formulario' => $valores['clave_formulario'] ?? token_aleatorio(),
     ], 'ventas');
 }
@@ -334,7 +340,7 @@ function admin_compradores(): array
     }
     $compradores = db_filas(
         "SELECT c.*, a.revocado_en, a.id AS acceso_id,
-                (SELECT COALESCE(SUM(monto_centavos), 0) FROM ventas WHERE comprador_id = c.id) AS pagado
+                (SELECT GROUP_CONCAT(moneda || ':' || monto_centavos) FROM ventas WHERE comprador_id = c.id) AS pagado
          FROM compradores c LEFT JOIN accesos a ON a.comprador_id = c.id AND a.producto = 'curso'
          $where ORDER BY c.id DESC LIMIT ? OFFSET ?",
         [...$parametros, LEADS_POR_PAGINA + 1, ($pagina - 1) * LEADS_POR_PAGINA]
@@ -530,9 +536,9 @@ function admin_exportar(string $tipo): array
     }
     $consultas = [
         'ventas' => 'SELECT v.id, v.creado_en AS fecha, c.nombre, c.email, c.whatsapp, v.monto_centavos / 100.0 AS monto, v.moneda,
-                        v.metodo_pago, v.referencia_pago, l.codigo, l.utm_source, l.utm_campaign, l.utm_content
+                        v.metodo_pago, v.referencia_pago, l.codigo, l.pais, l.utm_source, l.utm_campaign, l.utm_content
                     FROM ventas v JOIN compradores c ON c.id = v.comprador_id LEFT JOIN leads l ON l.id = v.lead_id ORDER BY v.id',
-        'leads' => 'SELECT l.id, l.creado_en AS fecha, l.codigo, l.boton, l.clics, l.utm_source, l.utm_medium, l.utm_campaign,
+        'leads' => 'SELECT l.id, l.creado_en AS fecha, l.codigo, l.pais, l.boton, l.clics, l.utm_source, l.utm_medium, l.utm_campaign,
                         l.utm_content, l.utm_term, CASE WHEN v.id IS NULL THEN \'no\' ELSE \'sí\' END AS vendido
                     FROM leads l LEFT JOIN ventas v ON v.lead_id = l.id ORDER BY l.id',
         'compradores' => 'SELECT c.id, c.creado_en AS fecha, c.nombre, c.email, c.whatsapp, c.notas,

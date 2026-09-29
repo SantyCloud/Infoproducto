@@ -30,7 +30,7 @@ $url = fn (int $p) => '/admin/compradores?' . http_build_query(array_filter(['q'
                     <td><?= e($c['email']) ?></td>
                     <td><?= e($c['whatsapp'] ?: '—') ?></td>
                     <td><?= e(fecha_local($c['creado_en'], 'd/m/Y')) ?></td>
-                    <td><?= e(formatear_centavos($c['pagado'])) ?></td>
+                    <td><?= e(formatear_montos($c['pagado'])) ?></td>
                     <td>
                         <?php if ($c['acceso_id'] && !$c['revocado_en']): ?><span class="estado estado--ok">Activo</span>
                         <?php else: ?><span class="estado estado--error">Sin acceso</span><?php endif; ?>

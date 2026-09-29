@@ -29,6 +29,21 @@ return [
     // la página de reembolsos muestra solo lo que exige la ley (contenido/legal/reembolsos-sin-garantia.md).
     'garantia_dias' => 0,
 
+    // Páginas por país, para los anuncios de cada país: tudominio.com/ec, tudominio.com/mx…
+    // Todas muestran el mismo contenido. Cada una usa las capturas de su país (ingresos-ec-1.jpg,
+    // ingresos-mx-1.jpg…) y, si lo indicas, sus propios precios y moneda; lo que no indiques se toma
+    // de arriba (dólares). La promo usa el mismo nombre y la misma fecha de fin para todos.
+    // tudominio.com (sin país) muestra la versión general, en dólares y con las capturas de todos.
+    'paises' => [
+        'ec' => ['nombre' => 'Ecuador'],
+        'mx' => [
+            'nombre' => 'México',
+            'moneda' => 'MXN',        // pesos mexicanos: se muestra "$200 MXN"
+            'precio_normal' => 300,
+            'precio_promo' => 200,
+        ],
+    ],
+
     // WhatsApp donde cierras las ventas: código de país + número, sin "+" ni espacios (Ecuador: 593…)
     'whatsapp' => [
         'numero' => '593968473532',

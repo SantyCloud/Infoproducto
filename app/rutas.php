@@ -44,4 +44,7 @@ return [
     ['GET', '/admin/accesos/nuevo', 'admin_acceso_formulario'],
     ['POST', '/admin/accesos', 'admin_acceso_crear'],
     ['GET', '/admin/exportar/{tipo}', 'admin_exportar'],
+
+    // Páginas por país (/ec, /mx…, según contenido/negocio.php). Va al final a propósito.
+    ['GET', '/{pais}', 'pagina_pais'],
 ];

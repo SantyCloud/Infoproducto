@@ -11,13 +11,14 @@ function variables_texto(?array $negocio = null): array
     $negocio ??= contenido('negocio');
     $promo = $negocio['promo'] ?? [];
     $legal = $negocio['legal'] ?? [];
+    $moneda = (string) ($negocio['moneda'] ?? 'USD');
     return [
         '{producto}' => (string) $negocio['producto'],
-        '{precio}' => formatear_precio(precio_actual($negocio)),
-        '{precio_normal}' => formatear_precio($negocio['precio_normal']),
+        '{precio}' => formatear_precio(precio_actual($negocio), $moneda),
+        '{precio_normal}' => formatear_precio($negocio['precio_normal'], $moneda),
         '{promo_nombre}' => (string) ($promo['nombre'] ?? ''),
         '{promo_fin}' => empty($promo['termina']) ? '' : fecha_larga($promo['termina']),
-        '{ahorro}' => formatear_precio(ahorro_promo($negocio)),
+        '{ahorro}' => formatear_precio(ahorro_promo($negocio), $moneda),
         '{descuento}' => porcentaje_descuento($negocio) . '%',
         '{garantia_dias}' => (string) ($negocio['garantia_dias'] ?? 0),
         '{metodos_pago}' => implode(', ', $negocio['metodos_pago'] ?? []),

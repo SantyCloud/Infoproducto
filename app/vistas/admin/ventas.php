@@ -24,7 +24,7 @@ $estadosMeta = ['enviado' => ['Enviado', 'ok'], 'error' => ['Error', 'error'], '
                     <td><?= (int) $venta['id'] ?></td>
                     <td><?= e(fecha_local($venta['creado_en'])) ?></td>
                     <td class="envolver"><a href="/admin/compradores/<?= (int) $venta['comprador_id'] ?>"><?= e($venta['nombre']) ?></a><br><small class="suave"><?= e($venta['email']) ?></small></td>
-                    <td><strong><?= e(formatear_centavos($venta['monto_centavos'])) ?></strong></td>
+                    <td><strong><?= e(formatear_centavos($venta['monto_centavos'], $venta['moneda'])) ?></strong></td>
                     <td><?= e($venta['metodo_pago'] ?: '—') ?></td>
                     <td class="codigo"><?= e($venta['codigo'] ?: '—') ?></td>
                     <td class="envolver"><?= e($venta['utm_campaign'] ?: '—') ?><?php if ($venta['utm_content']): ?><br><small class="suave"><?= e($venta['utm_content']) ?></small><?php endif; ?></td>

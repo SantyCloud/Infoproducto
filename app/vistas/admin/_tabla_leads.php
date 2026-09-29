@@ -7,11 +7,12 @@
 <?php if ($leads): ?>
     <div class="tabla-contenedor">
         <table class="tabla">
-            <thead><tr><th>Código</th><th>Fecha</th><th>Campaña / anuncio</th><th>Botón</th><th>Clics</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Código</th><th>País</th><th>Fecha</th><th>Campaña / anuncio</th><th>Botón</th><th>Clics</th><th>Estado</th></tr></thead>
             <tbody>
             <?php foreach ($leads as $lead): ?>
                 <tr>
                     <td class="codigo"><?= e($lead['codigo']) ?></td>
+                    <td><?= e(strtoupper((string) ($lead['pais'] ?? '')) ?: '—') ?></td>
                     <td><?= e(fecha_local($lead['creado_en'])) ?></td>
                     <td class="envolver">
                         <?= e($lead['utm_campaign'] ?: ($lead['utm_source'] ?: 'Directo')) ?>

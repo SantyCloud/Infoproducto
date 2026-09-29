@@ -48,6 +48,7 @@ function datos_de_la_visita(array $consulta, array $cookies, array $servidor): a
     return [
         'visitante_id' => visitante_valido($cookies['vis'] ?? null) ? $cookies['vis'] : bin2hex(random_bytes(16)),
         'boton' => limpiar((string) preg_replace('/[^a-z0-9_-]/', '', strtolower(texto_de($consulta['b'] ?? null))), 30),
+        'pais' => pais_valido($consulta['p'] ?? null),
         'event_id' => event_id_valido($consulta['eid'] ?? null) ? $consulta['eid'] : nuevo_event_id(),
         'atribucion' => $atribucion,
         'fbc' => limpiar($cookies['_fbc'] ?? '', 600) ?: null,
@@ -75,8 +76,9 @@ function lead_registrar(array $visita): array
         );
         if ($existente !== null) {
             db_ejecutar(
-                'UPDATE leads SET clics = clics + 1, ultimo_clic_en = ?, fbc = COALESCE(fbc, ?), fbp = COALESCE(fbp, ?) WHERE id = ?',
-                [$ahora, $visita['fbc'], $visita['fbp'], $existente['id']]
+                'UPDATE leads SET clics = clics + 1, ultimo_clic_en = ?, fbc = COALESCE(fbc, ?), fbp = COALESCE(fbp, ?),
+                 pais = COALESCE(?, pais) WHERE id = ?',
+                [$ahora, $visita['fbc'], $visita['fbp'], $visita['pais'] ?? null, $existente['id']]
             );
             return ['nuevo' => false] + db_fila('SELECT * FROM leads WHERE id = ?', [$existente['id']]);
         }
@@ -91,6 +93,7 @@ function lead_registrar(array $visita): array
             'event_id' => $eventId,
             'visitante_id' => $visita['visitante_id'],
             'boton' => $visita['boton'] ?: null,
+            'pais' => $visita['pais'] ?? null,
             'utm_source' => $a['utm_source'] ?? null,
             'utm_medium' => $a['utm_medium'] ?? null,
             'utm_campaign' => $a['utm_campaign'] ?? null,

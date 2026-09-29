@@ -162,7 +162,7 @@ return [
             ['pregunta' => '¿Cómo pago?', 'respuesta' => 'Por WhatsApp: te paso los datos para pagar con {metodos_pago}. Cuando confirmo tu pago, te llega el acceso.'],
             ['pregunta' => '¿Cuándo recibo el acceso?', 'respuesta' => 'Apenas confirmo tu pago te llega un email con tu enlace de acceso, y también te lo envío por WhatsApp.'],
             ['pregunta' => '¿Cuánto voy a ganar?', 'respuesta' => 'Depende de ti: de cuántos clientes consigas y del margen que pongas. No hay ingresos garantizados. Te enseño el método; el trabajo lo pones tú.'],
-            ['pregunta' => '¿Sirve si no vivo en Ecuador?', 'respuesta' => 'Sí. El negocio funciona en cualquier país y los pagos se manejan en dólares.'],
+            ['pregunta' => '¿Sirve para mi país?', 'respuesta' => 'Sí. Tus clientes pueden estar en cualquier país y el panel funciona igual desde donde estés.'],
             ['pregunta' => '¿Tengo que pagar el panel smmclixy?', 'respuesta' => 'Registrarte es gratis. Solo recargas saldo cuando tienes pedidos de tus clientes.'],
             ['pregunta' => '¿Y si no me gusta?', 'respuesta' => 'Tienes {garantia_dias} días de garantía: si no es para ti, te devuelvo tu dinero.'],
         ],

@@ -4,8 +4,11 @@
  * @var array       $l               textos de la landing
  * @var array       $negocio         contenido/negocio.php
  * @var bool        $promo           ¿promo vigente?
- * @var string      $precio          precio actual formateado ("$10")
- * @var string      $precio_normal   "$15"
+ * @var string|null $pais            página de un país (mx, ec…) o null en la general
+ * @var string      $precio          precio actual con su moneda ("$10", "$200 MXN")
+ * @var string      $precio_normal   "$15", "$300 MXN"
+ * @var string      $precio_html     precio actual para mostrarlo en grande (la moneda va en pequeño)
+ * @var string      $precio_normal_corto  precio normal sin la moneda ("$300"), para tacharlo al lado del actual
  * @var string|null $tiempo_promo    "Quedan 3 días", "Hasta el 31 de octubre"…
  * @var int         $descuento       % de descuento de la promo (0 si no hay)
  * @var bool        $garantia        ¿hay garantía?
@@ -14,7 +17,7 @@
  */
 
 $boton = fn (string $texto, string $id, string $clase = ''): string =>
-    plantilla('parciales/boton_wa', ['texto' => $texto, 'id' => $id, 'clase' => $clase]);
+    plantilla('parciales/boton_wa', ['texto' => $texto, 'id' => $id, 'clase' => $clase, 'pais' => $pais]);
 $galeria = fn (array $lista, string $alt, string $hueco): string =>
     plantilla('parciales/galeria', ['capturas' => $lista, 'alt' => $alt, 'hueco' => $hueco, 'mostrar_huecos' => $mostrar_huecos]);
 $horas = ['07:02', '07:04', '07:09', '07:15'];
@@ -34,8 +37,8 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
             <p class="hero__sub"><?= formato($l['hero']['subtitulo']) ?></p>
 
             <div class="precio-linea">
-                <?php if ($promo): ?><span class="precio-antes"><?= e($precio_normal) ?></span><?php endif; ?>
-                <span class="precio-ahora"><?= e($precio) ?></span>
+                <?php if ($promo): ?><span class="precio-antes"><?= e($precio_normal_corto) ?></span><?php endif; ?>
+                <span class="precio-ahora"><?= $precio_html ?></span>
                 <?php if ($promo && $descuento > 0): ?><span class="chip-promo"><?= formato($l['promo']['etiqueta'] ?? '−' . $descuento . '%') ?></span><?php endif; ?>
             </div>
 
@@ -168,7 +171,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
                     <h2><?= formato($l['resultados']['titulo']) ?></h2>
                     <p><?= formato($l['resultados']['texto']) ?></p>
                 </div>
-                <?= $galeria($capturas['resultados'], 'Captura de resultados del negocio del autor', 'Aquí van tus capturas de ingresos: ingresos-1.jpg, ingresos-2.jpg… (sin datos de clientes)') ?>
+                <?= $galeria($capturas['resultados'], 'Captura de resultados del negocio del autor', 'Aquí van tus capturas de ingresos: ' . ($pais ? "ingresos-$pais-1.jpg, ingresos-$pais-2.jpg…" : 'ingresos-1.jpg, ingresos-2.jpg…') . ' (sin datos de clientes)') ?>
                 <p class="aviso"><?= formato($l['resultados']['aviso']) ?></p>
             </div>
         </section>
@@ -229,7 +232,7 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
                 <?php if ($promo): ?>
                     <p class="precio-antes precio-antes--grande">Precio normal <s><?= e($precio_normal) ?></s></p>
                 <?php endif; ?>
-                <p class="precio-grande"><?= e($precio) ?><small>Pago único · Sin mensualidades</small></p>
+                <p class="precio-grande"><?= $precio_html ?><small>Pago único · Sin mensualidades</small></p>
                 <?php if ($promo): ?>
                     <p class="tiempo-promo">
                         <?= e($negocio['promo']['nombre']) ?><?= $tiempo_promo ? ' · ' . e($tiempo_promo) : '' ?>.
@@ -302,8 +305,8 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
 
 <div class="barra-fija">
     <p class="barra-fija__precio">
-        <?php if ($promo): ?><s><?= e($precio_normal) ?></s><?php endif; ?>
-        <?= e($precio) ?>
+        <?php if ($promo): ?><s><?= e($precio_normal_corto) ?></s><?php endif; ?>
+        <?= $precio_html ?>
     </p>
     <?= $boton($l['barra_fija']['boton'], 'barra') ?>
 </div>

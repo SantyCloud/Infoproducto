@@ -20,6 +20,7 @@ function venta_validar(array $entrada): array
         'metodo_pago' => limpiar($entrada['metodo_pago'] ?? '', 60),
         'referencia_pago' => limpiar($entrada['referencia_pago'] ?? '', 120),
         'codigo' => normalizar_codigo(texto_de($entrada['codigo'] ?? null)),
+        'moneda' => strtoupper(limpiar($entrada['moneda'] ?? '', 10)),
         'enviar_email' => !empty($entrada['enviar_email']),
         'clave_formulario' => preg_match('/^[A-Za-z0-9_-]{20,64}$/', texto_de($entrada['clave_formulario'] ?? null))
             ? (string) $entrada['clave_formulario'] : null,
@@ -36,7 +37,7 @@ function venta_validar(array $entrada): array
         $errores['whatsapp'] = 'El WhatsApp debe tener entre 8 y 15 dígitos, con código de país (ej. 593991234567).';
     }
     if (!preg_match('/^\d{1,5}(\.\d{1,2})?$/', $datos['monto'])) {
-        $errores['monto'] = 'Escribe el monto en dólares, por ejemplo 10 o 12.50.';
+        $errores['monto'] = 'Escribe el monto cobrado, por ejemplo 10 o 200.';
     }
     if ($datos['codigo'] !== '') {
         $datos['lead'] = db_fila('SELECT * FROM leads WHERE codigo = ?', [$datos['codigo']]);
@@ -46,6 +47,12 @@ function venta_validar(array $entrada): array
         } elseif ($ventaDelLead !== null && !venta_por_clave($datos['clave_formulario'])) {
             $errores['codigo'] = "El código {$datos['codigo']} ya tiene una venta registrada (#$ventaDelLead).";
         }
+    }
+    // Moneda: la que elijas o, en automático, la de la página por la que llegó el cliente
+    if ($datos['moneda'] === '' || $datos['moneda'] === 'AUTO') {
+        $datos['moneda'] = (string) negocio_de_pais($datos['lead']['pais'] ?? null)['moneda'];
+    } elseif (!in_array($datos['moneda'], monedas(), true)) {
+        $errores['moneda'] = 'Elige la moneda en que te pagó.';
     }
     return [$datos, $errores];
 }
@@ -72,7 +79,7 @@ function venta_registrar(array $datos): array
                 'comprador_id' => $comprador['id'],
                 'lead_id' => $datos['lead']['id'] ?? null,
                 'monto_centavos' => (int) round((float) $datos['monto'] * 100),
-                'moneda' => 'USD',
+                'moneda' => $datos['moneda'] ?? 'USD',
                 'metodo_pago' => $datos['metodo_pago'] ?: null,
                 'referencia_pago' => $datos['referencia_pago'] ?: null,
                 'clave_formulario' => $datos['clave_formulario'],
@@ -135,8 +142,38 @@ function metodos_de_pago(): array
     return [...(contenido('negocio')['metodos_pago'] ?? []), 'Otro'];
 }
 
-/** 1000 centavos → "$10" */
-function formatear_centavos(int|string|null $centavos): string
+/** 1000 centavos → "$10" · en pesos: 20000 → "$200 MXN" */
+function formatear_centavos(int|string|null $centavos, ?string $moneda = 'USD'): string
 {
-    return formatear_precio(((int) $centavos) / 100);
+    return formatear_precio(((int) $centavos) / 100, $moneda ?: 'USD');
+}
+
+/**
+ * Suma montos de varias monedas sin mezclarlas. Recibe lo que da la consulta
+ * GROUP_CONCAT(moneda || ':' || monto_centavos): "USD:1000,MXN:20000,USD:500" → "$15 · $200 MXN".
+ */
+function formatear_montos(?string $lista): string
+{
+    $totales = [];
+    foreach (array_filter(explode(',', (string) $lista)) as $par) {
+        [$moneda, $centavos] = array_pad(explode(':', $par, 2), 2, '0');
+        $totales[$moneda] = ($totales[$moneda] ?? 0) + (int) $centavos;
+    }
+    if (!$totales) {
+        return formatear_precio(0);
+    }
+    uksort($totales, fn ($a, $b) => ($a === 'USD' ? 0 : 1) <=> ($b === 'USD' ? 0 : 1) ?: strcmp($a, $b));
+    return implode(' · ', array_map(fn ($moneda, $centavos) => formatear_centavos($centavos, $moneda), array_keys($totales), $totales));
+}
+
+/** "MXN" → "Pesos mexicanos (MXN)", para el formulario de venta. */
+function nombre_moneda(string $moneda): string
+{
+    return match ($moneda) {
+        'USD' => 'Dólares (USD)',
+        'MXN' => 'Pesos mexicanos (MXN)',
+        'COP' => 'Pesos colombianos (COP)',
+        'PEN' => 'Soles (PEN)',
+        default => $moneda,
+    };
 }

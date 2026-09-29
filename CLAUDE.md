@@ -8,11 +8,12 @@ Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso 
 
 - Doble objetivo: vender el curso y que cada comprador se registre en smmclixy.com.
 - Tráfico: anuncios de Meta (Instagram/Facebook), casi todo desde el celular, en Latinoamérica.
-- Precio: $15 normal, $10 en promoción con fecha de fin real.
+- Precio: $15 normal, $10 en promoción con fecha de fin real. En México, en pesos: $300 → $200 MXN.
+- Una página por país para los anuncios: `/ec` (Ecuador) y `/mx` (México), con el mismo contenido.
 
 ## Flujo de venta (no hay pasarela de pago)
 
-1. Anuncio → **landing**, cuyo único trabajo es convencer. Se guardan los UTM y el fbclid.
+1. Anuncio → **landing** del país (`/ec`, `/mx`), cuyo único trabajo es convencer. Se guardan los UTM y el fbclid.
 2. El visitante toca el botón → `/wa` crea un **lead** con un código corto (ej. `K7Q2`) y lo manda a WhatsApp con un mensaje ya escrito que incluye ese código.
 3. El dueño cierra y cobra **por WhatsApp** (transferencia bancaria, PayPal, Binance/USDT).
 4. En el **panel admin** registra la venta (código + nombre + email + WhatsApp + monto) → se crea el acceso, se envía el email (Resend) y el evento **Purchase** a Meta (API de Conversiones) con los datos del clic original.
@@ -30,7 +31,8 @@ Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso 
 | Videos | **YouTube (oculto) o Google Drive** | El dueño quiere que sus usuarios de smmclixy también los vean, así que los videos NO son exclusivos. La protección se centra en el área de miembros y los descargables. Preferir YouTube: Drive corta la reproducción de los archivos muy vistos. |
 | Acceso de miembros | Enlace mágico por email, de un solo uso y confirmado con un botón (POST); sesión de 90 días; máximo 3 dispositivos | Sin contraseñas que olvidar. El botón evita que los antivirus del correo "gasten" el enlace al escanearlo. El admin puede copiar el enlace y mandarlo también por WhatsApp. |
 | Garantía | **Sin garantía de satisfacción** (`garantia_dias = 0`): la landing no la menciona y `/reembolsos` muestra `reembolsos-sin-garantia.md`, que cubre solo lo que exige la ley: devolución si pide dentro de 15 días y **no ha entrado** al curso (art. 45 de la Ley Orgánica de Defensa del Consumidor, reformado), problemas de acceso nuestros y cobros de más. `compradores.primer_ingreso_en` guarda cuándo entró por primera vez (se ve en su ficha del panel) | Decisión del dueño. Un "no hay devoluciones" absoluto no vale ante la ley (no se puede renunciar a los derechos del consumidor). **Pendiente de validar con un abogado.** Con `garantia_dias > 0` vuelve la política con garantía (`reembolsos.md`). |
-| Precio | $15 tachado → $10 con fecha de fin **real** (`contenido/negocio.php`) | Un precio anterior ficticio es publicidad engañosa (Ley Orgánica de Defensa del Consumidor, art. 7). Al vencer la fecha, la web muestra $15 sola. Nada de contadores falsos. |
+| Países | `/ec` y `/mx` (lista en `contenido/negocio.php` → `paises`; ruta `/{pais}` al final de `app/rutas.php`). Mismo contenido; cada una usa sus capturas (`ingresos-ec-*`, `ingresos-mx-*`; si no tiene, las generales) y, si se indica, su precio y moneda. El botón lleva el país (`/wa?b=hero&p=mx`), el clic lo guarda (`leads.pais`) y la venta se registra en su moneda (automático según el clic, o a mano). Totales del panel por moneda; el Purchase va a Meta con la moneda de la venta. `/` es la versión general (dólares, capturas de todos) | Anuncios separados por país. En México "$" se lee como pesos: ahí se muestra y se cobra en MXN ("$200 MXN"). |
+| Precio | $15 tachado → $10 con fecha de fin **real** (`contenido/negocio.php`). México: $300 → $200 MXN, misma fecha de fin. Etiqueta junto al precio en `contenido/landing.php` (`promo.etiqueta`: "Ahorra {ahorro}") | Un precio anterior ficticio es publicidad engañosa (Ley Orgánica de Defensa del Consumidor, art. 7). Al vencer la fecha, la web muestra $15 sola. Nada de contadores falsos. |
 | Medición | Pixel (PageView, Contact) + API de Conversiones (Contact con el mismo `event_id`; Purchase al registrar la venta) | Meta aprende de las ventas reales, aunque se cierren por WhatsApp. |
 | Purchase | `action_source=website` si la venta trae código (con URL, IP, navegador y fbc/fbp del clic); `chat` si no | Meta solo acepta eventos web con datos del navegador; sin clic de origen, la venta fue por chat. Graph API `v25.0` (configurable con `META_GRAPH_VERSION`). |
 | Privacidad | Medición por **interés legítimo** con aviso en el pie y derecho de oposición (no hay banner de cookies) | Menos fricción en la landing. **Pendiente de validar con un abogado** si algún país exige consentimiento previo. |
@@ -51,7 +53,7 @@ app/                 código PHP (no accesible desde la web)
                      ventas, curso, mantenimiento (limpieza y respaldos)
   paginas/           publico.php (landing, /wa, legales), miembros.php, admin.php
   vistas/            layouts (landing, admin, miembros, general), admin/, miembros/, emails/, parciales/
-  migraciones/       001_inicial.sql, 002_progreso.sql, 003_primer_ingreso.sql…
+  migraciones/       001_inicial.sql, 002_progreso.sql, 003_primer_ingreso.sql, 004_pais_de_los_leads.sql…
 bin/                 instalar.php, crear-admin.php, desbloquear-panel.php, optimizar-capturas.php, tareas.php (cron)
 contenido/           lo que edita el dueño:
   negocio.php        nombre, precios, promo, garantía, WhatsApp, métodos de pago, smmclixy, datos legales
@@ -67,7 +69,7 @@ DESPLIEGUE.md        guía paso a paso para Hostinger
 SEGURIDAD.md         revisión de seguridad
 ```
 
-Rutas: `/` landing · `/wa` botón de WhatsApp · `/terminos` `/privacidad` `/reembolsos` · `/entrar`, `/acceso/{token}`,
+Rutas: `/` landing general · `/ec`, `/mx` landing por país · `/wa` botón de WhatsApp · `/terminos` `/privacidad` `/reembolsos` · `/entrar`, `/acceso/{token}`,
 `/miembros…` área de miembros · `/admin…` panel (ver `app/rutas.php`).
 
 **Producción:** el repo se clona en `/home/uXXXX/domains/DOMINIO/`. Así la carpeta `public_html/` del repo **es** la raíz web de Hostinger, y el código, el `.env` y la base de datos quedan fuera del alcance de internet. Para actualizar basta con `git pull` + `php bin/instalar.php`. En Hostinger no se puede cambiar la raíz web, por eso la carpeta pública se llama `public_html`.
@@ -79,7 +81,7 @@ Rutas: `/` landing · `/wa` botón de WhatsApp · `/terminos` `/privacidad` `/re
 - Cada ruta devuelve una respuesta (`html()`, `redireccion()`, `pagina_error()`) y `despachar()` la envía.
 - SQL **siempre** con parámetros (`db_fila`, `db_filas`, `db_valor`, `db_ejecutar`, `db_insertar`, `db_transaccion`). Nunca se concatenan datos del usuario.
 - En las vistas, todo dato va escapado: `<?= e($dato) ?>`. Hay CSP: los `<script>` y `<style>` en línea necesitan `nonce="<?= csp_nonce() ?>"`.
-- Fechas en la BD en **UTC** (`Y-m-d H:i:s`, con `ahora_bd()`); se muestran en `ZONA_HORARIA` (America/Guayaquil). Dinero en **centavos** (INTEGER).
+- Fechas en la BD en **UTC** (`Y-m-d H:i:s`, con `ahora_bd()`); se muestran en `ZONA_HORARIA` (America/Guayaquil). Dinero en **centavos** (INTEGER) y **siempre con su moneda** (`ventas.moneda`): nunca sumar monedas distintas (`formatear_montos()`); precios con `negocio_de_pais()` + `formatear_precio($monto, $moneda)`.
 - Los textos editables van solo en `contenido/` y los secretos solo en `.env`, que nunca se sube a Git.
 - Compatibilidad con **PHP 8.2** (Hostinger): no usar `json_validate`, `array_find`, property hooks, constantes tipadas ni otras novedades de 8.3/8.4.
 - Los avisos de PHP se convierten en excepciones (`app/bootstrap.php`), así que el código no debe generar warnings.
