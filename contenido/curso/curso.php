@@ -14,6 +14,8 @@
  */
 
 return [
+    // Los módulos siguen lo que promete la landing ("Todo lo que recibes"): el método, el curso de
+    // cómo usar el sistema y el de cómo crear anuncios. Pon cada video tuyo en su módulo.
     'modulos' => [
         [
             'titulo' => 'Bienvenida',
@@ -22,33 +24,24 @@ return [
             ],
         ],
         [
-            'titulo' => 'El negocio SMM por dentro',
+            'titulo' => 'El método',
             'lecciones' => [
                 ['slug' => 'que-es-smm', 'titulo' => 'Qué son los servicios SMM y quién los compra', 'duracion' => '', 'video' => ''],
+                ['slug' => 'calcular-precios', 'titulo' => 'Cuánto cobrar: precios que dejan ganancia', 'duracion' => '', 'video' => '', 'descargas' => ['lista-de-precios']],
+                ['slug' => 'primeros-clientes', 'titulo' => 'Dónde encontrar tus primeros clientes', 'duracion' => '', 'video' => ''],
+                ['slug' => 'cerrar-por-whatsapp', 'titulo' => 'Atender, cobrar y dar seguimiento por WhatsApp', 'duracion' => '', 'video' => ''],
             ],
         ],
         [
-            'titulo' => 'Tu panel de proveedor',
+            'titulo' => 'Curso: cómo usar el sistema',
             'lecciones' => [
                 ['slug' => 'crear-cuenta-panel', 'titulo' => 'Crea tu cuenta en smmclixy y haz tu primer pedido', 'duracion' => '', 'video' => ''],
             ],
         ],
         [
-            'titulo' => 'Precios que dejan ganancia',
+            'titulo' => 'Curso: cómo crear anuncios',
             'lecciones' => [
-                ['slug' => 'calcular-precios', 'titulo' => 'Cómo calcular tus precios', 'duracion' => '', 'video' => '', 'descargas' => ['lista-de-precios']],
-            ],
-        ],
-        [
-            'titulo' => 'Tus primeros clientes',
-            'lecciones' => [
-                ['slug' => 'primeros-clientes', 'titulo' => 'Dónde encontrar tus primeros clientes', 'duracion' => '', 'video' => ''],
-            ],
-        ],
-        [
-            'titulo' => 'Atender y cerrar por WhatsApp',
-            'lecciones' => [
-                ['slug' => 'cerrar-por-whatsapp', 'titulo' => 'Responder, cobrar y dar seguimiento', 'duracion' => '', 'video' => ''],
+                ['slug' => 'crear-anuncios', 'titulo' => 'Tu primer anuncio para conseguir clientes', 'duracion' => '', 'video' => ''],
             ],
         ],
     ],
