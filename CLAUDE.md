@@ -40,6 +40,7 @@ Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso 
 | Purchase | `action_source=website` si la venta trae código (con URL, IP, navegador y fbc/fbp del clic); `chat` si no | Meta solo acepta eventos web con datos del navegador; sin clic de origen, la venta fue por chat. Graph API `v25.0` (configurable con `META_GRAPH_VERSION`). |
 | Privacidad | Medición por **interés legítimo** con aviso en el pie y derecho de oposición (no hay banner de cookies) | Menos fricción en la landing. **Pendiente de validar con un abogado** si algún país exige consentimiento previo. |
 | Estilo visual | El del panel de proveedor (su cara pública): lienzo rosa pastel (`#fff7f9`, `#fdeef3`), tinta ciruela (`#3f122b`, `#754259`), rosa de acción (`#e02768` → `#d0205f`), franjas vino con orilla de nubes y tarjetas blancas con aro rosado. Letra **Zen Maru Gothic** alojada en la web (`public_html/assets/fonts/`, solo latín, 3 grosores, ~35 KB, licencia OFL). Botones de compra en rosa con el ícono de WhatsApp; el verde queda solo para "Enviar por WhatsApp" del panel. Colores en `:root` de `landing.css` y `app.css` | Pedido del dueño (29-09-2026): que la web lleve el estilo y los colores de su panel. La letra no se pide a Google: sin terceros nuevos en la privacidad ni peticiones extra. |
+| Adelanto del curso | Video corto del dueño junto a "Cómo empecé" (`app/lib/adelanto.php`, `vistas/parciales/adelanto.php`, textos en `contenido/landing.php` → `adelanto`). Alojado en la web (`public_html/assets/video/`, en Git): `bin/optimizar-video.php` (usa ffmpeg; Hostinger no lo tiene, así que se ejecuta en una computadora) crea el video completo de 720 px con sonido, 6 s sin sonido para la vista previa, la portada y `adelanto.json`, **sin metadatos** (el celular guarda la ubicación GPS). En la computadora, la vista previa sale al pasar el mouse; en el celular, al verlo en pantalla (no con ahorro de datos ni con "reducir movimiento"). Al tocarlo, completo y con sonido; se pausa si baja y deja de verlo. Sin video, no se muestra | Pedido del dueño (30-09-2026): que den curiosidad y lo escuchen. En la web y no en YouTube: se puede ver al pasar el mouse, sin terceros ni cookies nuevas, y nada del video se descarga hasta que hace falta. |
 | Emails sin clave | Sin `RESEND_API_KEY` los emails quedan "simulados" (log + panel) | Se puede probar todo en local; el panel muestra el enlace para enviarlo por WhatsApp. En producción el log no guarda el enlace. |
 | Límites | Panel: 5 intentos/15 min por IP (IPv6 por /64), sin contador global; el dispositivo donde el dueño ya entró (cookie `admin_dispositivo`, firmada con `CLAVE_APP`) tiene su propio contador. `/entrar`: 3 por email cada 15 min, 6 por email al día, 10 por IP cada 15 min y 60 emails al día en total. `/wa`: 30 leads nuevos por hora por IP. `/activar`: 10 intentos por IP cada 15 min, **sin tope global** (con él, cualquiera frenaría la activación de todos) | Que nadie pueda dejar al dueño fuera del panel ni gastar el cupo de Resend (100/día) que necesitan los emails de compra. Ver `SEGURIDAD.md`. |
 
@@ -54,11 +55,12 @@ app/                 código PHP (no accesible desde la web)
                      contenido, negocio (precio/promo), texto (variables, Markdown), iconos, imagenes (capturas),
                      visitas (IP, bots, UTM), limites, leads (código WhatsApp), cliente_http, meta (Pixel/CAPI),
                      seguridad (tokens, sesiones, CSRF), accesos (compradores, enlaces mágicos), emails (Resend),
-                     ventas, activaciones (enlaces de activación), curso, mantenimiento (limpieza y respaldos)
+                     ventas, activaciones (enlaces de activación), curso, mantenimiento (limpieza y respaldos),
+                     adelanto (video de la landing)
   paginas/           publico.php (landing, /wa, legales), miembros.php, admin.php
   vistas/            layouts (landing, admin, miembros, general), admin/, miembros/, emails/, parciales/
   migraciones/       001_inicial.sql, 002_progreso.sql, 003_primer_ingreso.sql, 004_pais_de_los_leads.sql, 005_activaciones.sql…
-bin/                 instalar.php, crear-admin.php, desbloquear-panel.php, optimizar-capturas.php, tareas.php (cron)
+bin/                 instalar.php, crear-admin.php, desbloquear-panel.php, optimizar-capturas.php, optimizar-video.php, tareas.php (cron)
 contenido/           lo que edita el dueño:
   negocio.php        nombre, precios, promo, garantía, WhatsApp, métodos de pago, smmclixy, datos legales
   landing.php        todos los textos de la landing
@@ -66,7 +68,7 @@ contenido/           lo que edita el dueño:
   legal/*.md         términos, privacidad, reembolsos con y sin garantía (plantillas para revisar con abogado)
   capturas/          capturas originales (ya difuminadas) → se optimizan a public_html/assets/img/capturas/
   curso/             curso de EJEMPLO (el real va en storage/curso/, fuera de Git)
-public_html/         raíz web: index.php (único punto de entrada), .htaccess, robots.txt, favicon.svg, assets/ (css, js, img, fonts)
+public_html/         raíz web: index.php (único punto de entrada), .htaccess, robots.txt, favicon.svg, assets/ (css, js, img, fonts, video)
 storage/             fuera de Git: base.sqlite, logs/, respaldos/, curso/ (curso real)
 tests/               pruebas: php tests/run.php
 DESPLIEGUE.md        guía paso a paso para Hostinger
@@ -104,6 +106,7 @@ php bin/instalar.php                                        # crea .env, carpeta
 php bin/crear-admin.php                                     # usuario y contraseña del panel (hash en .env)
 php bin/desbloquear-panel.php                               # borra el bloqueo por "Demasiados intentos" del panel
 php bin/optimizar-capturas.php                              # solo capturas
+php bin/optimizar-video.php VIDEO.mp4 [SEGUNDO]             # adelanto de la landing (necesita ffmpeg); --quitar lo quita
 php bin/tareas.php                                          # lo que hace el cron: Meta, limpieza, respaldo diario
 php -S localhost:8000 -t public_html public_html/index.php  # web local → http://localhost:8000
 php tests/run.php                                           # pruebas (incluye un recorrido completo con servidor real)
@@ -131,6 +134,7 @@ Ya dio (29-09-2026): nombre **Método Revendedor SMM**, WhatsApp **+593 96 847 3
 conoció el modelo por un amigo de Argentina, trabaja desde el celular) y **sin garantía**.
 
 - (Decidió no firmar la historia con su nombre.) Capturas ya puestas y aprobadas por él: chats (`mensajes-1`) e ingresos de Ecuador y México (`ingresos-ec-1/2`, `ingresos-mx-1/2`, sacadas de un video y anonimizadas: solo título, monto y hora).
+- Adelanto del curso: un video corto suyo mostrando algo interesante (vertical, de 30 a 60 s, con subtítulos). Sin el nombre ni la web del proveedor ni datos de clientes: la landing es pública y Meta la revisa. Lo envía y se prepara con `bin/optimizar-video.php`.
 - Módulos del curso y bonos: está grabando los videos. La landing muestra módulos de EJEMPLO que deben coincidir con el curso real antes de publicar.
 - Dominio (aún no lo elige) y enlace de registro o de referido de smmclixy, más código de bono (opcional).
 - Datos legales en `contenido/negocio.php` (titular, RUC o cédula, ciudad) y email de soporte.

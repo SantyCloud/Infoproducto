@@ -668,6 +668,162 @@ h2 strong {
     font-weight: 900;
 }
 
+/* Adelanto del curso (video del dueño): debajo de la historia; en pantallas grandes, a su lado si es vertical */
+
+.historia--con-adelanto {
+    display: grid;
+    gap: 36px;
+    justify-items: center;
+}
+
+.historia__texto {
+    width: 100%;
+}
+
+.adelanto {
+    width: min(272px, 74vw);
+    margin: 0;
+    text-align: center;
+}
+
+.adelanto:not(.adelanto--vertical) {
+    width: 100%;
+    max-width: 640px;
+}
+
+.adelanto__marco {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    border: 8px solid var(--vino);
+    border-radius: 32px;
+    background: var(--vino-hondo);
+    box-shadow: 0 30px 60px -22px rgba(63, 18, 43, 0.55), 0 0 0 6px rgba(247, 207, 218, 0.6);
+}
+
+.adelanto:not(.adelanto--vertical) .adelanto__marco {
+    border-radius: 24px;
+}
+
+.adelanto__portada {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* El video lo agrega landing.js encima de la portada; se ve cuando ya está reproduciendo */
+.adelanto__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: transparent;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+
+.adelanto--reproduciendo .adelanto__video {
+    opacity: 1;
+}
+
+.adelanto__boton {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    color: var(--blanco);
+    text-decoration: none;
+    background: linear-gradient(to top, rgba(44, 12, 30, 0.6), rgba(44, 12, 30, 0) 42%);
+}
+
+.adelanto__boton:focus-visible {
+    outline: 3px solid var(--blanco);
+    outline-offset: -8px;
+}
+
+.adelanto__play {
+    display: grid;
+    place-items: center;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--degradado-accion);
+    box-shadow: 0 12px 26px -10px rgba(224, 39, 104, 0.75), 0 0 0 6px rgba(255, 255, 255, 0.35);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.adelanto__play .icono {
+    width: 30px;
+    height: 30px;
+    margin-left: 4px; /* el triángulo se ve centrado */
+}
+
+.adelanto__boton:hover .adelanto__play,
+.adelanto__boton:focus-visible .adelanto__play {
+    transform: scale(1.07);
+}
+
+.adelanto__etiqueta,
+.adelanto__sonido {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(44, 12, 30, 0.8);
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transform: translateX(-50%);
+}
+
+.adelanto__sonido .icono {
+    width: 17px;
+    height: 17px;
+}
+
+.adelanto__sonido,
+.adelanto--previa .adelanto__etiqueta,
+.adelanto--completo .adelanto__boton {
+    display: none;
+}
+
+.adelanto--previa .adelanto__sonido {
+    display: inline-flex;
+}
+
+/* Mientras se ve el pedacito sin sonido, el botón se esconde (que se vea el video) y la etiqueta invita a escucharlo */
+.adelanto--previa .adelanto__play {
+    opacity: 0;
+    transform: scale(0.6);
+}
+
+.adelanto figcaption {
+    margin-top: 20px;
+    color: var(--tinta-2);
+    font-size: 0.95rem;
+}
+
+.adelanto-hueco {
+    width: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .adelanto:not(.adelanto--previa) .adelanto__play {
+        animation: pulso-play 2.6s ease-in-out infinite;
+    }
+
+    @keyframes pulso-play {
+        0%, 100% { box-shadow: 0 12px 26px -10px rgba(224, 39, 104, 0.75), 0 0 0 6px rgba(255, 255, 255, 0.35); }
+        50% { box-shadow: 0 12px 26px -10px rgba(224, 39, 104, 0.75), 0 0 0 14px rgba(255, 255, 255, 0); }
+    }
+}
+
 /* Cómo funciona */
 
 .pasos {
@@ -1259,5 +1415,20 @@ h2 strong {
 
     .barra-fija .boton-wa {
         flex: 0 1 380px;
+    }
+
+    .historia--con-adelanto.historia--al-lado {
+        max-width: 1000px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 64px;
+    }
+
+    .historia--al-lado h2 {
+        text-align: left;
+    }
+
+    .adelanto--vertical {
+        width: 300px;
     }
 }

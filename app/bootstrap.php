@@ -20,6 +20,7 @@ require RAIZ . '/app/lib/negocio.php';
 require RAIZ . '/app/lib/texto.php';
 require RAIZ . '/app/lib/iconos.php';
 require RAIZ . '/app/lib/imagenes.php';
+require RAIZ . '/app/lib/adelanto.php';
 require RAIZ . '/app/lib/visitas.php';
 require RAIZ . '/app/lib/limites.php';
 require RAIZ . '/app/lib/leads.php';

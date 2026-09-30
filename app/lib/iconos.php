@@ -13,6 +13,8 @@ function icono(string $nombre, string $clase = 'icono'): string
         'escudo' => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
         'regalo' => '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
         'play' => '<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/>',
+        'reproducir' => '<path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/>',
+        'sin_sonido' => '<path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/>',
         'reloj' => '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
         'chevron' => '<path d="m6 9 6 6 6-6"/>',
         'flecha' => '<path d="M5 12h14M13 5l7 7-7 7"/>',

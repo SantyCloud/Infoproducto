@@ -42,6 +42,7 @@ Todo lo que puedes cambiar sin tocar código está en `contenido/`:
 - `emails.php`: textos de los emails.
 - `legal/`: términos, privacidad y reembolsos.
 - `capturas/`: tus capturas (ya difuminadas).
+- El video de adelanto del curso: envíaselo a Claude, o `php bin/optimizar-video.php tu-video.mp4` (necesita ffmpeg).
 - `curso/`: curso de ejemplo; el real va en `storage/curso/` del servidor.
 
 Decisiones técnicas y convenciones en [CLAUDE.md](CLAUDE.md). Revisión de seguridad en [SEGURIDAD.md](SEGURIDAD.md).

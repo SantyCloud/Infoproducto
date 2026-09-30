@@ -13,6 +13,7 @@
  * @var int         $descuento       % de descuento de la promo (0 si no hay)
  * @var bool        $garantia        ¿hay garantía?
  * @var array       $capturas        ['demanda' => [...], 'resultados' => [...], 'testimonios' => [...]]
+ * @var array|null  $adelanto        video "adelanto del curso" (ver adelanto()), o null si no hay
  * @var bool        $mostrar_huecos
  */
 
@@ -107,14 +108,22 @@ $horas = ['07:02', '07:04', '07:09', '07:15'];
         </section>
     <?php endif; ?>
 
-    <?php if ($l['historia']['parrafos']): ?>
+    <?php $hayAdelanto = $adelanto !== null || $mostrar_huecos; ?>
+    <?php if ($l['historia']['parrafos'] || $hayAdelanto): ?>
         <section class="seccion" id="historia">
-            <div class="contenedor historia">
-                <h2><?= formato($l['historia']['titulo']) ?></h2>
-                <?php foreach ($l['historia']['parrafos'] as $parrafo): ?>
-                    <p><?= formato($parrafo) ?></p>
-                <?php endforeach; ?>
-                <?php if ($l['historia']['firma']): ?><p class="historia__firma">— <?= formato($l['historia']['firma']) ?></p><?php endif; ?>
+            <div class="contenedor historia<?= $hayAdelanto ? ' historia--con-adelanto' : '' ?><?= ($adelanto['vertical'] ?? true) ? ' historia--al-lado' : '' ?>">
+                <?php if ($l['historia']['parrafos']): ?>
+                    <div class="historia__texto">
+                        <h2><?= formato($l['historia']['titulo']) ?></h2>
+                        <?php foreach ($l['historia']['parrafos'] as $parrafo): ?>
+                            <p><?= formato($parrafo) ?></p>
+                        <?php endforeach; ?>
+                        <?php if ($l['historia']['firma']): ?><p class="historia__firma">— <?= formato($l['historia']['firma']) ?></p><?php endif; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($hayAdelanto): ?>
+                    <?= plantilla('parciales/adelanto', ['adelanto' => $adelanto, 'textos' => $l['adelanto'] ?? [], 'mostrar_huecos' => $mostrar_huecos]) ?>
+                <?php endif; ?>
             </div>
         </section>
     <?php endif; ?>

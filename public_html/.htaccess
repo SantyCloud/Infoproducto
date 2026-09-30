@@ -20,8 +20,10 @@ Options -Indexes
 
 # Letra de la web (Zen Maru Gothic, en assets/fonts/): si cambia, el archivo cambia de nombre
 AddType font/woff2 .woff2
+# Adelanto del curso (assets/video/)
+AddType video/mp4 .mp4
 
-# Caché larga para CSS, JS, imágenes y letras: sus URLs llevan ?v= (o, las letras, un nombre fijo)
+# Caché larga para CSS, JS, imágenes, letras y video: sus URLs llevan ?v= (o, las letras, un nombre fijo)
 <IfModule mod_expires.c>
     ExpiresActive On
     ExpiresByType font/woff2 "access plus 1 year"
@@ -34,4 +36,5 @@ AddType font/woff2 .woff2
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/svg+xml "access plus 1 year"
     ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType video/mp4 "access plus 1 year"
 </IfModule>

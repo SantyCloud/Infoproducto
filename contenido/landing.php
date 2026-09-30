@@ -75,6 +75,15 @@ return [
         'firma' => '', // vacío: la historia va sin firma (decisión del dueño)
     ],
 
+    // Adelanto del curso: tu video corto, junto a "Cómo empecé". Aparece solo cuando ya está preparado
+    // (php bin/optimizar-video.php, o pídeselo a Claude). En la computadora, al pasar el mouse se ve un pedacito
+    // sin sonido; en el celular, al llegar a él. Al tocarlo se ve completo, con sonido. La duración se agrega sola.
+    'adelanto' => [
+        'etiqueta' => 'Mira un adelanto',
+        'sonido' => 'Dale play para escucharme',
+        'texto' => 'Un pedacito de lo que vas a ver dentro del curso, explicado por mí.',
+    ],
+
     // Oculta (lista vacía)
     'como_funciona' => [
         'titulo' => 'Cómo funciona el negocio',

@@ -1,6 +1,6 @@
 /*
- * Landing: barra fija, visor de capturas y botones de WhatsApp (con el evento Contact del Pixel).
- * Todo es opcional: sin JavaScript, los botones llevan igual a WhatsApp.
+ * Landing: barra fija, visor de capturas, adelanto del curso y botones de WhatsApp (con el evento Contact del Pixel).
+ * Todo es opcional: sin JavaScript, los botones llevan igual a WhatsApp y el adelanto se abre como video.
  */
 (function () {
     'use strict';
@@ -86,5 +86,88 @@
             visor.showModal();
         });
         visor.addEventListener('click', function () { visor.close(); });
+    }
+
+    // 4. Adelanto del curso: unos segundos sin sonido al pasar el mouse (en el celular, al llegar a él)
+    //    y completo, con sonido, al tocarlo. Con "ahorro de datos" o "reducir movimiento", solo al tocarlo.
+    var botonAdelanto = document.querySelector('.js-adelanto');
+    if (botonAdelanto) {
+        var figura = botonAdelanto.closest('.adelanto');
+        var marco = botonAdelanto.parentNode;
+        var video = document.createElement('video');
+        var completo = false;
+        var cumple = function (medio) { return !!(window.matchMedia && window.matchMedia(medio).matches); };
+        var conPrevia = !cumple('(prefers-reduced-motion: reduce)') && !(navigator.connection && navigator.connection.saveData);
+        var conMouse = cumple('(hover: hover) and (pointer: fine)');
+
+        video.className = 'adelanto__video';
+        video.muted = true;
+        video.loop = true;
+        video.preload = 'none';
+        video.setAttribute('muted', '');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('aria-hidden', 'true');
+        marco.insertBefore(video, botonAdelanto);
+        video.addEventListener('playing', function () { figura.classList.add('adelanto--reproduciendo'); });
+
+        var reproducir = function (alFallar) {
+            var intento = video.play();
+            if (intento && typeof intento.catch === 'function') {
+                intento.catch(alFallar);
+            }
+        };
+        var verPrevia = function () {
+            if (completo || !conPrevia) {
+                return;
+            }
+            if (!video.getAttribute('src')) {
+                video.src = botonAdelanto.getAttribute('data-previa');
+            }
+            figura.classList.add('adelanto--previa');
+            // Si el navegador no deja reproducir solo (ahorro de batería…), queda la portada con su botón
+            reproducir(function () { figura.classList.remove('adelanto--previa'); });
+        };
+        var pausarPrevia = function () {
+            if (!completo) {
+                video.pause();
+            }
+        };
+
+        if (conMouse) {
+            marco.addEventListener('mouseenter', verPrevia);
+            marco.addEventListener('mouseleave', pausarPrevia);
+        }
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (entradas) {
+                var entrada = entradas[0];
+                if (completo) {
+                    if (!entrada.isIntersecting) {
+                        video.pause(); // bajó y ya no lo ve
+                    }
+                } else if (!conMouse) {
+                    if (entrada.intersectionRatio >= 0.6) {
+                        verPrevia();
+                    } else {
+                        pausarPrevia();
+                    }
+                }
+            }, { threshold: [0, 0.6] }).observe(marco);
+        }
+
+        botonAdelanto.addEventListener('click', function (evento) {
+            evento.preventDefault();
+            completo = true;
+            figura.classList.remove('adelanto--previa');
+            figura.classList.add('adelanto--completo');
+            video.removeAttribute('aria-hidden');
+            video.setAttribute('aria-label', 'Adelanto del curso');
+            video.loop = false;
+            video.muted = false;
+            video.removeAttribute('muted');
+            video.controls = true;
+            video.src = botonAdelanto.getAttribute('href');
+            reproducir(function () { /* queda con sus controles para darle play */ });
+            video.focus({ preventScroll: true });
+        });
     }
 })();

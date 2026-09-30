@@ -49,6 +49,7 @@ function datos_landing(array $negocio, array $crudo): array
             'resultados' => capturas_de_pais($landing['resultados']['capturas'] ?? 'ingresos', $pais),
             'testimonios' => capturas_de_pais($landing['testimonios']['capturas'] ?? 'testimonio', $pais),
         ],
+        'adelanto' => adelanto(),
         'mostrar_huecos' => !es_produccion(),
     ];
 }
