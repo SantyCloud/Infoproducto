@@ -9,7 +9,7 @@ Donde veas `tudominio.com` o `uXXXXXXXXX`, pon tus datos reales.
 
 Necesitas:
 
-- Tu plan Hostinger Premium con el dominio ya conectado (o el dominio gratis del plan).
+- Tu plan Hostinger Premium. Puede ser el mismo donde ya tienes otros sitios: esta web va como un sitio más (paso 1).
 - Acceso a este repositorio de GitHub.
 - (Para los emails) una cuenta gratis en [resend.com](https://resend.com).
 - (Para Meta) acceso a tu Administrador de eventos de Meta.
@@ -22,8 +22,14 @@ Necesitas:
 
 ## 1. Preparar el sitio en hPanel
 
+0. **Agregar la web al plan:** hPanel → **Sitios web → Agregar sitio web** → elige tu plan Premium → sitio vacío → **usar un dominio que ya tengo** → escribe `tudominio.com`.
+   - **Si el dominio está en otra cuenta de Hostinger**, hPanel avisa que está registrado en otra cuenta. Tienes dos caminos:
+     - **Moverlo a esta cuenta (recomendado: todo en un solo lugar).** En la cuenta donde está el dominio: **Dominios → Transferencias → Mover dominio a otra cuenta de Hostinger** → escribe el email de esta cuenta. Luego, en esta cuenta: **Dominios → Aceptar**, y completa tus datos. Es gratis, no pide código y la web no se cae. Solo se puede **96 horas después de registrarlo**.
+     - **Dejarlo donde está.** Copia el valor **TXT** que muestra hPanel. En la otra cuenta, ve a **Dominios → tudominio.com → DNS** y crea un registro **TXT** con nombre `@`, ese valor y TTL `900`. Espera hasta 24 horas y vuelve a agregar el sitio. Los registros DNS de después (los de Resend, paso 6) se crean en esa otra cuenta.
+   - **Dominio nuevo:** confirma el email de verificación que manda Hostinger (desde `@hostinger-domains.com`) antes de 15 días. Si no, **suspenden el dominio**. Moverlo de cuenta vuelve a pedir esa verificación.
+   - **Si el plan ya tiene otros sitios:** en los pasos siguientes elige siempre **este** sitio (arriba, en el selector de sitios web), así no cambias la configuración de los otros.
 1. **SSL (https):** en hPanel → **Sitios web → tu sitio → Seguridad → SSL**, comprueba que el certificado esté **activo**. Hostinger lo instala gratis; puede tardar unos minutos tras conectar el dominio.
-2. **Versión de PHP:** **Avanzado → Configuración de PHP** → elige **PHP 8.3** (sirve 8.2 o superior). En la pestaña de extensiones, deja activadas `pdo_sqlite`, `sqlite3`, `curl`, `gd`, `mbstring` y `fileinfo` (vienen activas por defecto).
+2. **Versión de PHP (de este sitio):** **Avanzado → Configuración de PHP** → elige **PHP 8.3** (sirve 8.2 o superior). En la pestaña de extensiones, deja activadas `pdo_sqlite`, `sqlite3`, `curl`, `gd`, `mbstring` y `fileinfo` (vienen activas por defecto).
 3. **SSH:** **Avanzado → Acceso SSH → Habilitar**. Anota la **IP**, el **puerto (65002)** y el **usuario** (`uXXXXXXXXX`). La contraseña es la de tu cuenta FTP (Archivos → Cuentas FTP).
 
 ---
@@ -56,6 +62,7 @@ php -v
 
 El proyecto va **en la carpeta del dominio**, no dentro de `public_html`: así la carpeta `public_html/` del
 proyecto pasa a ser la web y el código, el `.env` y la base de datos quedan fuera del alcance de internet.
+Si el plan tiene otros sitios, cada uno tiene su carpeta en `~/domains/`: trabaja solo en la de este dominio.
 
 ```bash
 cd ~/domains/tudominio.com
@@ -68,10 +75,25 @@ git checkout -t origin/claude/zealous-galileo-7m4972
 
 > Cuando el código esté en la rama `main`, usa `origin/main` en la última línea.
 >
-> **Si el repositorio es privado**, crea una "deploy key" de solo lectura:
-> `ssh-keygen -t ed25519 -f ~/.ssh/github -N ""` → copia el contenido de `~/.ssh/github.pub` en
-> GitHub → tu repo → **Settings → Deploy keys → Add deploy key** → y usa
-> `git -c core.sshCommand="ssh -i ~/.ssh/github" fetch` con el remoto `git@github.com:SantyCloud/Infoproducto.git`.
+> **Si el repositorio es privado**, el servidor necesita una "deploy key" (llave de solo lectura) para descargarlo.
+> Crea la llave:
+>
+> ```bash
+> mkdir -p ~/.ssh && chmod 700 ~/.ssh
+> ssh-keygen -t ed25519 -f ~/.ssh/github-infoproducto -N ""
+> cat ~/.ssh/github-infoproducto.pub
+> ```
+>
+> Copia lo que muestra en GitHub → tu repo → **Settings → Deploy keys → Add deploy key**, sin marcar "Allow write access".
+> Luego, en lugar de la línea `git remote add` de arriba:
+>
+> ```bash
+> ssh-keyscan github.com >> ~/.ssh/known_hosts
+> git remote add origin git@github.com:SantyCloud/Infoproducto.git
+> git config core.sshCommand "ssh -i ~/.ssh/github-infoproducto -o IdentitiesOnly=yes"
+> ```
+>
+> Así `git pull` funciona siempre, también el del botón de publicar desde GitHub (paso 11).
 
 ---
 
@@ -115,7 +137,7 @@ El panel (`/admin`) muestra en **Pendientes** lo que todavía falta.
 
 1. En [resend.com](https://resend.com) → **Domains → Add Domain** → escribe `tudominio.com`.
 2. Resend te mostrará unos registros DNS (normalmente un **MX** y un **TXT** para `send`, y un **TXT** para `resend._domainkey`).
-3. En hPanel → **Dominios → tudominio.com → DNS / Nameservers → Administrar registros DNS**, crea cada registro **copiando exactamente** tipo, nombre y valor. Recomendado además: un TXT con nombre `_dmarc` y valor `v=DMARC1; p=none;`.
+3. En hPanel (en la cuenta donde está el dominio) → **Dominios → tudominio.com → DNS / Nameservers → Administrar registros DNS**, crea cada registro **copiando exactamente** tipo, nombre y valor. Recomendado además: un TXT con nombre `_dmarc` y valor `v=DMARC1; p=none;`.
 4. Vuelve a Resend y pulsa **Verify**. Puede tardar desde minutos hasta unas horas.
 5. En Resend → **API Keys → Create API Key** (permiso *Sending access*). Copia la clave en el `.env`:
 
@@ -153,7 +175,8 @@ utm_source=facebook&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={
 
 ## 8. Tareas automáticas (cron)
 
-hPanel → **Avanzado → Cron Jobs** → tipo **Personalizado**, cada 5 minutos (`*/5 * * * *`), comando:
+hPanel → **Avanzado → Cron Jobs** → tipo **Personalizado**, cada 5 minutos (`*/5 * * * *`). Crea uno **nuevo** (si el plan tiene
+otros sitios, no cambies sus tareas). Comando:
 
 ```
 /opt/alt/php83/usr/bin/php /home/uXXXXXXXXX/domains/tudominio.com/bin/tareas.php

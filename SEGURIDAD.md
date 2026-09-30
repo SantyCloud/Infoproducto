@@ -66,6 +66,7 @@ se registran desde el panel, con sesión de administrador.
 | Datos personales enviados a Meta | Email, teléfono y nombre van en hash SHA-256; IP y navegador de los clics se borran a los 90 días (cron) | `meta`, `mantenimiento` |
 | Cookies robables | Sesiones `HttpOnly`, `Secure` con https, `SameSite` (`Strict` en el panel) | `ventas`: cookie del panel |
 | El enlace mágico (o el código de activación) en el "Referer" | Sus páginas usan `Referrer-Policy: same-origin`: el enlace nunca se envía a otros sitios. (No `no-referrer`: con esa política el navegador envía el botón con `Origin: null` y nadie podría entrar) | `seguridad`: Origin "null" |
+| Otro sitio del mismo plan de hosting (el panel de proveedor) | En un plan compartido todos los sitios corren con el mismo usuario del servidor: una falla en uno expone los archivos del otro (aquí, el `.env` y la base de datos). **Riesgo aceptado** para no pagar otro plan. Mitigación: mantener actualizado el script del otro sitio, contraseñas distintas para cada panel y, si el negocio crece, planes separados | — |
 | Web incrustada en otra (clickjacking) | `frame-ancestors 'none'` y `X-Frame-Options: DENY` | `http`: cabeceras |
 
 ## Revisión independiente (28-09-2026)
@@ -125,7 +126,8 @@ sin datos privados): se borró y `.gitignore` impide subir imágenes sueltas en 
 - Usa una **contraseña larga y única** para el panel (una frase de 4 o 5 palabras) y no la compartas.
 - Si el panel dice "Demasiados intentos" y no fuiste tú, alguien está probando contraseñas: no pasa nada
   si la tuya es larga. Desde tu celular o computadora de siempre puedes seguir entrando.
-- Mantén el repositorio **privado** o, si es público, nunca subas el curso real ni capturas sin difuminar.
+- Mantén el repositorio **privado** o, si es público, nunca subas el curso real ni capturas sin difuminar. Hazlo
+  privado antes de publicar la web: el repositorio nombra al proveedor, y cualquiera que busque la web podría llegar a él.
 - Descarga de vez en cuando una copia de `storage/respaldos/`.
 - Activa la verificación en dos pasos en Hostinger, GitHub, Resend y Meta.
 - Revisa las plantillas legales con un abogado, incluida la base legal de las cookies de medición.

@@ -26,7 +26,7 @@ Web de venta y entrega de un infoproducto: **Método Revendedor SMM**, un curso 
 | Tema | Decisión | Motivo |
 |---|---|---|
 | Pago | Sin pasarela: cierre manual por WhatsApp | Decisión del dueño. No hay webhooks de pago: el acceso solo lo crea el admin y ninguna URL pública lo otorga. |
-| Hosting | Hostinger **Premium** (compartido) | Plan del dueño: PHP, SSH, Git y cron, pero no Node.js. |
+| Hosting | Hostinger **Premium** (compartido), el **mismo plan donde está smmclixy.com**: esta web es un sitio más (`~/domains/DOMINIO/`) | Plan del dueño: PHP, SSH, Git y cron, pero no Node.js. Compartir el plan tiene un riesgo (mismo usuario del servidor), ver `SEGURIDAD.md`. |
 | Stack | PHP 8.2+ sin framework **ni dependencias** (sin Composer) | Nada que instalar ni actualizar en el servidor; lo mantiene una sola persona. |
 | Base de datos | **SQLite** (`storage/base.sqlite`) | Sin configuración, igual en local y en producción, poco volumen. Copia diaria por cron (fase 7). |
 | Emails | **Resend** (API HTTP con curl) | Llega mejor que el SMTP compartido. Gratis: 100/día y 3.000/mes. |
@@ -136,7 +136,8 @@ conoció el modelo por un amigo de Argentina, trabaja desde el celular) y **sin 
 - (Decidió no firmar la historia con su nombre.) Capturas ya puestas y aprobadas por él: chats (`mensajes-1`) e ingresos de Ecuador y México (`ingresos-ec-1/2`, `ingresos-mx-1/2`, sacadas de un video y anonimizadas: solo título, monto y hora).
 - Adelanto del curso: un video corto suyo mostrando algo interesante (vertical, de 30 a 60 s, con subtítulos). Sin el nombre ni la web del proveedor ni datos de clientes: la landing es pública y Meta la revisa. Lo envía y se prepara con `bin/optimizar-video.php`.
 - Módulos del curso y bonos: está grabando los videos. La landing muestra módulos de EJEMPLO que deben coincidir con el curso real antes de publicar.
-- Dominio (aún no lo elige) y enlace de registro o de referido de smmclixy, más código de bono (opcional).
+- Dominio: **ya lo compró** (30-09-2026), en otra cuenta de Hostinger. Se conecta al plan moviéndolo de cuenta (se puede 96 h después del registro) o con un TXT de verificación (`DESPLIEGUE.md`, paso 1). Tiene 15 días para confirmar el email de verificación (ICANN): si no, lo suspenden. **No escribir el dominio en el repositorio mientras sea público**: con él, cualquiera que lo busque llegaría a este repo y al nombre del proveedor. Va solo en el `.env` del servidor (`URL_SITIO`).
+- Enlace de registro o de referido de smmclixy, más código de bono (opcional).
 - Datos legales en `contenido/negocio.php` (titular, RUC o cédula, ciudad) y email de soporte.
 - Cuentas: Resend (fase 5), Pixel + token de la API de Conversiones (fase 6), acceso SSH a Hostinger (fase 7).
 
@@ -153,3 +154,4 @@ A 27-09-2026 el repo `SantyCloud/Infoproducto` es **público** (se recomendó al
 - **Política de Meta:** prohíbe vender o comprar interacción (likes, seguidores, vistas) y revisa tanto el anuncio como la landing. Puede rechazar anuncios o restringir la cuenta publicitaria.
 - **Capturas de ingresos:** Meta rechaza "recompensas económicas poco realistas por poco esfuerzo". Hay que mostrarlas con contexto y el aviso "resultados no garantizados", sin promesas del tipo "gana $X en Y días".
 - **Datos personales en las capturas:** difuminar nombres, números y fotos de clientes (Ley Orgánica de Protección de Datos Personales).
+- **Plan compartido con smmclixy.com:** en un plan compartido todos los sitios corren con el mismo usuario del servidor. Si uno tiene una falla, el otro queda expuesto (el `.env` y la base de datos de esta web, o los datos del panel). Riesgo aceptado para no pagar otro plan: mantener actualizado el script del panel y separar los planes si el negocio crece.
