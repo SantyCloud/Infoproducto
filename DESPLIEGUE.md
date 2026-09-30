@@ -24,7 +24,11 @@ Necesitas:
 
 0. **Agregar la web al plan:** hPanel → **Sitios web → Agregar sitio web** → elige tu plan Premium → sitio vacío → **usar un dominio que ya tengo** → escribe `tudominio.com`.
    - **Si el dominio está en otra cuenta de Hostinger**, hPanel avisa que está registrado en otra cuenta. Tienes dos caminos:
-     - **Moverlo a esta cuenta (recomendado: todo en un solo lugar).** En la cuenta donde está el dominio: **Dominios → Transferencias → Mover dominio a otra cuenta de Hostinger** → escribe el email de esta cuenta. Luego, en esta cuenta: **Dominios → Aceptar**, y completa tus datos. Es gratis, no pide código y la web no se cae. Solo se puede **96 horas después de registrarlo**.
+     - **Moverlo a esta cuenta (recomendado: todo en un solo lugar).** Es gratis, no pide código y la web no se cae. Solo se puede **96 horas después de registrarlo**: antes, el botón no aparece.
+       1. En la cuenta donde está el dominio: **Dominios → Transferencias → Mover dominio a otra cuenta de Hostinger** → elige el dominio → **Iniciar movimiento de dominio** → escribe el email de esta cuenta. No uses la casilla "Transferir" de esa página: es para traer dominios de otras empresas, y se paga.
+       2. En esta cuenta: **Dominios → Aceptar → Confirmar** → completa tus datos de contacto → **Finalizar registro**.
+       3. Confirma los emails de verificación que llegan a los dos correos.
+       - Si el botón no aparece pasadas las 96 horas, pídeselo al chat de soporte de Hostinger: lo hacen ellos.
      - **Dejarlo donde está.** Copia el valor **TXT** que muestra hPanel. En la otra cuenta, ve a **Dominios → tudominio.com → DNS** y crea un registro **TXT** con nombre `@`, ese valor y TTL `900`. Espera hasta 24 horas y vuelve a agregar el sitio. Los registros DNS de después (los de Resend, paso 6) se crean en esa otra cuenta.
    - **Dominio nuevo:** confirma el email de verificación que manda Hostinger (desde `@hostinger-domains.com`) antes de 15 días. Si no, **suspenden el dominio**. Moverlo de cuenta vuelve a pedir esa verificación.
    - **Si el plan ya tiene otros sitios:** en los pasos siguientes elige siempre **este** sitio (arriba, en el selector de sitios web), así no cambias la configuración de los otros.
